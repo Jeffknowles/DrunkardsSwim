@@ -10,10 +10,21 @@ def randpick(TRANSMAT):
 	pick = 0 if choice[0] <= TRANSMAT[0]*1000 else 1
 	return pick
 
+def orient_angle(x,y): ## relative to flow, away from flow = 180
+	if x >= 0 and y >= 0:
+		angle = np.arctan(x/y)*180/np.pi
+	if x >= 0 and y < 0:
+		angle = ((2*np.pi+np.arctan(x/y))*180/np.pi)-90
+	if x < 0 and y >= 0:
+		angle = (2*np.pi+np.arctan(x/y))*180/np.pi
+	if x < 0 and y < 0:
+		angle = (np.arctan(x/y)*180/np.pi)+90
+	return angle
+
 ####################################
 ########### MAIN FUNCTION ##########
 ####################################
-def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE):
+def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION):
 
     ## set number of dimensions
     NDIM = 3
@@ -45,34 +56,27 @@ def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE):
     ########################## Set Flow
     if FLOW_SPEED is 0:
 	FLOW_ON = 0
-
-    if FLOW_SPEED is 6:
+    elif FLOW_SPEED > 0:
 	FLOW_ON = 1
-	CURRENT_X = ([[0.003, 0.005, 0.005, 0.005, 0.004, 0.003],
-			  [0.006, 0.025, 0.02, 0.015, 0.015, 0.006],
-			  [0.006, 0.03, 0.03, 0.03, 0.02, 0.006],
-			  [0.006, 0.03, 0.06, 0.05, 0.02, 0.006],
-			  [0.006, 0.02, 0.02, 0.01, 0.015, 0.006],
-                          [0.006, 0.006, 0.008, 0.008, 0.006, 0.006]])
-    
-    if FLOW_SPEED is 8:
-	FLOW_ON = 1
-	CURRENT_X = ([[0.003, 0.005, 0.005, 0.005, 0.005, 0.003],
-			  [0.008, 0.03, 0.02, 0.02, 0.02, 0.008],
-			  [0.008, 0.035, 0.035, 0.035, 0.02, 0.008],
-			  [0.008, 0.04, 0.08, 0.07, 0.02, 0.008],
-			  [0.008, 0.02, 0.03, 0.02, 0.02, 0.008],
-                          [0.008, 0.008, 0.01, 0.01, 0.008, 0.008]])
-    
-    if FLOW_SPEED is 10:
-	FLOW_ON = 1
-	CURRENT_X = ([[0.005, 0.01, 0.01, 0.01, 0.01, 0.005],
-			  [0.01, 0.04, 0.04, 0.04, 0.04, 0.01],
-			  [0.01, 0.04, 0.05, 0.05, 0.04, 0.01],
-			  [0.01, 0.04, 0.1, 0.08, 0.04, 0.01],
-			  [0.01, 0.02, 0.02, 0.02, 0.02, 0.01],
-                          [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]])
-
+	
+	if VERSION == 'JEB':
+		CURRENT_X = np.array([[ 0.08,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.08],
+		      [ 0.15 ,  0.3 ,  0.3 ,  0.5 ,  0.3 ,  0.15 ],
+		      [ 0.15 ,  0.8 ,  0.8 ,  0.8 ,  0.5 ,  0.15 ],
+		      [ 0.15 ,  1.0 ,  1.0 ,  0.6 ,  1.0 ,  0.15 ],
+		      [ 0.15 ,  0.7 ,  1.0 ,  1.0 ,  0.8 ,  0.15 ],
+		      [ 0.10 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
+		CURRENT_X = CURRENT_X*FLOW_SPEED*0.01 # convert cm/s into m/s
+		
+	if  VERSION == 'New':
+		CURRENT_X = np.array([[ 0.05,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.05],
+		      [ 0.1 ,  0.4 ,  0.4 ,  0.4 ,  0.4 ,  0.1 ],
+		      [ 0.1 ,  0.4 ,  0.5 ,  0.5 ,  0.4 ,  0.1 ],
+		      [ 0.1 ,  0.4 ,  1.0 ,  0.8 ,  0.4 ,  0.1 ],
+		      [ 0.1 ,  0.2 ,  0.2 ,  0.2 ,  0.2 ,  0.1 ],
+		      [ 0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
+		CURRENT_X = CURRENT_X*(FLOW_SPEED*0.01) # convert cm/s into m/s
+	
     if FLOW_ON is 0:
         CURRENTVEL = ([0,0,0])
     if FLOW_ON is 1:
@@ -90,6 +94,7 @@ def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE):
     #### Preallocate
     VEL = np.zeros((round(SIMLENGTH/BINSIZE),NDIM))
     POS = np.zeros((round(SIMLENGTH/BINSIZE),NDIM))
+    ORIENT = np.zeros((round(SIMLENGTH/BINSIZE,1)))
     POS[0,:] = IPOS
     ###### Setup Counters and state record
     PERIOD = 0
@@ -108,10 +113,8 @@ def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE):
     latDOT = 0.0 ## starting value
     latRESET = 0
     latCUT = 1
-    #latTHRESH = 0
-    #gC = 1.5
     k_ = 0.007 ## decreasing causes increased spiking
-
+    
 
     ###################
     #### MAIN LOOP ####
@@ -163,7 +166,7 @@ def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE):
 
         if latDOT >= latCUT:
 	    latDOT = latRESET
-	    SWIM_LEN = np.random.random(1)*2
+	    SWIM_LEN = 0.25 + np.random.random(1)*1.75
             movecount = 0
                    
     ##########################    
@@ -172,13 +175,14 @@ def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE):
 	
     ##Calculate Thrust (dimensional)
         if movecount < SWIM_LEN/BINSIZE:
-            THRUST = np.array([5e-5, np.sin(THETA)*np.sin(PHI)*POWER,
+            THRUST = np.array([8e-5, np.sin(THETA)*np.sin(PHI)*POWER,
 			   np.cos(PHI)*POWER])
             movecount +=1
         elif movecount >= SWIM_LEN/BINSIZE:
             THRUST = np.array([np.cos(THETA)*np.sin(PHI)*POWER,
 			   np.sin(THETA)*np.sin(PHI)*POWER, np.cos(PHI)*POWER])
-    
+	    
+	ORIENT[BINCOUNT] = orient_angle(np.cos(THETA)*np.sin(PHI),np.sin(THETA)*np.sin(PHI))
     ## Calculate Current
     
     ##Calculate Drag
@@ -210,9 +214,4 @@ def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE):
             POS[BINCOUNT,:]=np.maximum(MINS,POS[BINCOUNT,:])
             POS[BINCOUNT,:]=np.minimum(MAXS,POS[BINCOUNT,:])
 
-    return POS
-
-
-
-
-
+    return POS,ORIENT

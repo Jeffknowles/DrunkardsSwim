@@ -59,16 +59,16 @@ def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION):
     elif FLOW_SPEED > 0:
 	FLOW_ON = 1
 	
-	if VERSION == 'JEB':
-		CURRENT_X = np.array([[ 0.08,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.08],
+	if VERSION == 'NEW':
+		CURRENT_X = np.array([[ 0.08,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.15],
 		      [ 0.15 ,  0.3 ,  0.3 ,  0.5 ,  0.3 ,  0.15 ],
-		      [ 0.15 ,  0.8 ,  0.8 ,  0.8 ,  0.5 ,  0.15 ],
-		      [ 0.15 ,  1.0 ,  1.0 ,  0.6 ,  1.0 ,  0.15 ],
-		      [ 0.15 ,  0.7 ,  1.0 ,  1.0 ,  0.8 ,  0.15 ],
-		      [ 0.10 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
+		      [ 0.15 ,  0.5 ,  0.4 ,  0.4 ,  0.5 ,  0.15 ],
+		      [ 0.15 ,  1.0 ,  0.6 ,  0.6 ,  1.0 ,  0.15 ],
+		      [ 0.15 ,  0.5 ,  1.0 ,  1.0 ,  0.5 ,  0.15 ],
+		      [ 0.10 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.10 ]])
 		CURRENT_X = CURRENT_X*FLOW_SPEED*0.01 # convert cm/s into m/s
 		
-	if  VERSION == 'New':
+	if  VERSION == 'JEB':
 		CURRENT_X = np.array([[ 0.05,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.05],
 		      [ 0.1 ,  0.4 ,  0.4 ,  0.4 ,  0.4 ,  0.1 ],
 		      [ 0.1 ,  0.4 ,  0.5 ,  0.5 ,  0.4 ,  0.1 ],
@@ -109,11 +109,11 @@ def randwalk(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION):
     SWIM_LEN = 0 # starting value
     movecount = 0 # starting value
     
-    TAUlat = 0.85 ## increasing slows spiking
+    TAUlat = 0.80 ## increasing slows spiking
     latDOT = 0.0 ## starting value
     latRESET = 0
     latCUT = 1
-    k_ = 0.007 ## decreasing causes increased spiking
+    k_ = 0.006 ## decreasing causes increased spiking
     
 
     ###################

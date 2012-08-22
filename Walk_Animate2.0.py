@@ -15,10 +15,12 @@ frog2=frog2*100
 
 class SubplotAnimation(animation.TimedAnimation):
     def __init__(self):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(10,8))
+        fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+        
         ax1 = fig.add_subplot(2, 1, 1,projection='3d')
         ax2 = fig.add_subplot(2, 1, 2,projection='3d')
-
+        
         self.t = np.arange(0,3000)
         self.x = frog[self.t,0]
         self.y = frog[self.t,1]
@@ -28,14 +30,16 @@ class SubplotAnimation(animation.TimedAnimation):
         self.y2 = frog2[self.t,1]
         self.z2 = frog2[self.t,2]
         
+        ax1.pbaspect = [1.4, 0.4, 0.4]
+        ax2.pbaspect = [1.4, 0.4, 0.4]
+        
+        #ax1.set_xlabel('x')
+        #ax1.set_ylabel('y')
+        #ax1.set_zlabel('z')
 
-        ax1.set_xlabel('x')
-        ax1.set_ylabel('y')
-        ax1.set_zlabel('z')
-
-        ax2.set_xlabel('x')
-        ax2.set_ylabel('y')
-        ax2.set_zlabel('z')
+        #ax2.set_xlabel('x')
+        #ax2.set_ylabel('y')
+        #ax2.set_zlabel('z')
         
         self.line1 = Line3D([], [], [], color='black')
         self.line1a = Line3D([], [], [], color='red', linewidth=2)
@@ -57,13 +61,20 @@ class SubplotAnimation(animation.TimedAnimation):
         ax1.set_ylim(0, 15)
         ax1.set_zlim(0, 15)
         ax1.set_title('NO FLOW Random Walk')
-        #ax1.set_aspect('equal', 'datalim')
 
         ax2.set_xlim(0, 68)
         ax2.set_ylim(0, 15)
         ax2.set_zlim(0, 15)
         ax2.set_title('NO FLOW Random Walk')
-        #ax2.set_aspect('equal', 'datalim')
+
+        ax1.set_xticks([0, 68])
+        ax1.set_yticks([])
+        ax1.set_zticks([0, 15])
+
+        ax2.set_xticks([0, 68])
+        ax2.set_yticks([])
+        ax2.set_zticks([0, 15])
+       
         
         animation.TimedAnimation.__init__(self, fig, interval=50, blit=True)
 

@@ -3,15 +3,29 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d
 from mpl_toolkits.mplot3d.art3d import Line3D
 import matplotlib.animation as animation
+import matplotlib.patches as patches
 import walkfunction as wlk
 
 LATLINE = 0
 FLOW_DYNAMICS = 'JEB'
-frog,orient = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
-frog=frog*100
+frogNoFlow,orient = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
+frogFlow,orient = wlk.randwalk(300,0.1, 0, frogNoFlow[-1],LATLINE,FLOW_DYNAMICS)
+frog = np.zeros((len(frogNoFlow)*2,3))
+frog[0:len(frogNoFlow),:] = frogNoFlow
+frog[len(frogNoFlow):len(frog),:] = frogFlow
+frog = frog*100
 
-frog2, orient = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
-frog2=frog2*100
+LATLINE = 1
+frog2NoFlow, orient = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
+frog2Flow,orient = wlk.randwalk(300,0.1, 0, frog2NoFlow[-1],LATLINE,FLOW_DYNAMICS)
+frog2 = np.zeros((len(frog2NoFlow)*2,3))
+frog2[0:len(frog2NoFlow),:] = frog2NoFlow
+frog2[len(frog2NoFlow):len(frog2),:] = frog2Flow
+frog2 = frog2*100
+
+flow = np.ones(len(frog2),'int')
+flow[0:len(frog2NoFlow)] = flow[0:len(frog2NoFlow)]*0
+speed = np.array(['0 cm/s','10 cm/s'],dtype='str')
 
 class SubplotAnimation(animation.TimedAnimation):
     def __init__(self):
@@ -21,18 +35,22 @@ class SubplotAnimation(animation.TimedAnimation):
         ax1 = fig.add_subplot(2, 1, 1,projection='3d')
         ax2 = fig.add_subplot(2, 1, 2,projection='3d')
         
-        self.t = np.arange(0,3000)
+        self.t = np.arange(0,6000)
         self.x = frog[self.t,0]
         self.y = frog[self.t,1]
         self.z = frog[self.t,2]
-
+        
         self.x2 = frog2[self.t,0]
         self.y2 = frog2[self.t,1]
         self.z2 = frog2[self.t,2]
+        #self.flow = flow[self.t]
         
         ax1.pbaspect = [1.4, 0.4, 0.4]
         ax2.pbaspect = [1.4, 0.4, 0.4]
-        
+
+        ax1.text2D(0.04, 0.65, '0 cm/s', fontsize=18, transform=ax1.transAxes)
+        ax2.text2D(0.04, 0.65, '0 cm/s', fontsize=18, transform=ax2.transAxes)
+
         #ax1.set_xlabel('x')
         #ax1.set_ylabel('y')
         #ax1.set_zlabel('z')
@@ -48,6 +66,7 @@ class SubplotAnimation(animation.TimedAnimation):
         self.line2 = Line3D([], [], [], color='black')
         self.line2a = Line3D([], [], [], color='red', linewidth=2)
         self.line2e = Line3D([], [], [], color='red', marker='o', markeredgecolor='r')
+
         
         ax1.add_line(self.line1)
         ax1.add_line(self.line1a)
@@ -60,12 +79,12 @@ class SubplotAnimation(animation.TimedAnimation):
         ax1.set_xlim(0, 68)
         ax1.set_ylim(0, 15)
         ax1.set_zlim(0, 15)
-        ax1.set_title('NO FLOW Random Walk')
+        ax1.set_title('NO Lateral Line Model')
 
         ax2.set_xlim(0, 68)
         ax2.set_ylim(0, 15)
         ax2.set_zlim(0, 15)
-        ax2.set_title('NO FLOW Random Walk')
+        ax2.set_title('Lateral Line Model')
 
         ax1.set_xticks([0, 68])
         ax1.set_yticks([])
@@ -112,5 +131,5 @@ class SubplotAnimation(animation.TimedAnimation):
             l.set_data([], [])
 
 ani = SubplotAnimation()
-ani.save('walk.mp4')
+#ani.save('walk.mp4')
 plt.show()

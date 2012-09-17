@@ -7,35 +7,6 @@ import scipy as sp
 #### Data Manipulation, Probability, Descriptive Stats ####
 ###########################################################
 
-def OrientationHist(Data,Dim = 3,Bin_Resolution = 15):
-    """
-    Compute an orientaiton histogram
-
-    Input
-    -----
-    Data: Data file with orientation measurements
-
-    Output
-    ------
-    Hist: count of data in each bin
-    BINS: edges of each bin used in histogram
-
-    Options
-    -------
-    Dim: dimension of the data to use. Default = 3 (usually where orientation data is stored)
-    Bin_Resolution: size of the bins used in histogram. Default = 15 
-    
-    """
-    Data = Data[:,3]
-
-    BINS = np.linspace(0,360,360/Bin_Resolution) ## 15degree bins
-
-    Hist,b = np.histogram(Data,bins=BINS)
-    Hist = np.append(Hist,Hist[0])
-
-    return Hist, BINS
-
-
 
 def StandardizeData(Data, Max_X, Max_YZ, Loc = np.array([0,1,2]) ):
     """
@@ -88,6 +59,66 @@ def StandardizeData(Data, Max_X, Max_YZ, Loc = np.array([0,1,2]) ):
     Standard_Data = np.array([X.T, Y.T, Z.T])
     
     return Standard_Data.T
+
+
+
+def ProportionDown(Data,Loc = 34.0,Dim = 0,TimePoints = 10):
+    """
+    Compute the proportion of animals downstream
+
+    Input
+    -----
+    Data: Position of animals
+
+    Output
+    ------
+    Downstream: Proportion of animals downstream at each Time Point
+
+    Options
+    -------
+    Loc: location of downstream cut off. Default = 34.0 (half way in the tank)
+    Dim: dimension of the data to use. Default = 0 (usually where X data is stored)
+    TimePoints: number of time points observed for each animal. Defaul = 10 (i.e. 30s, 60s, 90s, etc.)
+    """
+
+    Data = Data[:,Dim]
+
+    Downstream = np.zeros(TimePoints)
+
+    for i in range(0,TimePoints):
+        Downstream[i] = np.sum(Data[i::TimePoints]>Loc)/float(len(Data[i::TimePoints]))
+
+    return Downstream
+
+
+
+def OrientationHist(Data,Dim = 3,Bin_Resolution = 15):
+    """
+    Compute an orientaiton histogram
+
+    Input
+    -----
+    Data: Data file with orientation measurements
+
+    Output
+    ------
+    Hist: count of data in each bin
+    BINS: edges of each bin used in histogram
+
+    Options
+    -------
+    Dim: dimension of the data to use. Default = 3 (usually where orientation data is stored)
+    Bin_Resolution: size of the bins used in histogram. Default = 15 
+    
+    """
+    Data = Data[:,3]
+
+    BINS = np.linspace(0,360,360/Bin_Resolution) ## 15degree bins
+
+    Hist,b = np.histogram(Data,bins=BINS)
+    Hist = np.append(Hist,Hist[0])
+
+    return Hist, BINS
 
 
 
@@ -190,7 +221,7 @@ def MarginalProbabilityDist(Data,TimePoints = 10, Bin_Resolution = np.array([27.
 #### STATISTICAL ANALYSES ####
 ##############################
 
-def KL_Diverg(Real_Data, Model_Data, Dim=0, BIN_RESOLUTION=75,PRINT=0):
+def KL_Diverg(Real_Data, Model_Data, Dim=0, BIN_RESOLUTION=75,PRINT=1):
     """
     Computes the Kullback-Leibler Divergence between two probability distributions
     KL_Diverg = Sum( P * log2( P/ Model) )
@@ -255,36 +286,6 @@ def KL_Diverg(Real_Data, Model_Data, Dim=0, BIN_RESOLUTION=75,PRINT=0):
 
 
 
-def ProportionDown(Data,Loc = 34.0,Dim = 0,TimePoints = 10):
-    """
-    Compute the proportion of animals downstream
-
-    Input
-    -----
-    Data: Position of animals
-
-    Output
-    ------
-    Downstream: Proportion of animals downstream at each Time Point
-
-    Options
-    -------
-    Loc: location of downstream cut off. Default = 34.0 (half way in the tank)
-    Dim: dimension of the data to use. Default = 0 (usually where X data is stored)
-    TimePoints: number of time points observed for each animal. Defaul = 10 (i.e. 30s, 60s, 90s, etc.)
-    """
-
-    Data = Data[:,Dim]
-
-    Downstream = np.zeros(TimePoints)
-
-    for i in range(0,TimePoints):
-        Downstream[i] = np.sum(Data[i::TimePoints]>Loc)/float(len(Data[i::TimePoints]))
-
-    return Downstream
-
-
-
 def BayesHypothesisTest(Observed_Data,Model1_Data,Model2_Data, PRINT = 1,RECORD = 0):
     """
     Perform Bayes Hypothesis test on Observed data with Two models
@@ -308,7 +309,7 @@ def BayesHypothesisTest(Observed_Data,Model1_Data,Model2_Data, PRINT = 1,RECORD 
     """
 
     if RECORD == 1:
-        Record = np.zeros((len(Observed_Data[0])/10,6))
+        Record = np.zeros((len(Observed_Data)/10,6))
     
         #Prob_Model1 = 0
         #Prob_Model2 = 0
@@ -318,7 +319,7 @@ def BayesHypothesisTest(Observed_Data,Model1_Data,Model2_Data, PRINT = 1,RECORD 
     P_M0_Loc = (1/3.)
     pos = 0
     
-    for i in range(0,int(len(Observed_Data[0])/10)): ## For the number of tadpoles.
+    for i in range(0,int(len(Observed_Data)/10)): ## For the number of tadpoles.
     
         Observation = [ Observed_Data[(i*10):(i*10)+10,0],Observed_Data[(i*10):(i*10)+10,1],
                         Observed_Data[(i*10):(i*10)+10,2] ]
@@ -353,10 +354,10 @@ def BayesHypothesisTest(Observed_Data,Model1_Data,Model2_Data, PRINT = 1,RECORD 
     if PRINT == 1:
         print 'BF_01:',BF_01,'BF_12',BF_12,'BF_02',BF_02
 
-        #if RECORD == 1:
-        #    return BF_01,BF_02,BF_12,Record
-#else:
-    return BF_01,BF_02,BF_12
+    if RECORD == 1:
+        return BF_01,BF_02,BF_12,Record
+    else:
+        return BF_01,BF_02,BF_12
 
 
 
@@ -400,6 +401,21 @@ def OrientationPlot(OrientationHist_Data,BINS):
 
 #### BAYES RESULT PLOTS ####
 def BayesProgressPlot(Record):
+    """
+    Plots the record from BayesHypothesisTest()
+
+    Input
+    -----
+    Record: record file from BayesHypothesisTest() ouput
+
+    Output
+    ------
+    Plot
+
+    Options
+    -------
+    In development.
+    """
     FONTSIZE = 26
     fig = plt.figure(figsize=(10,7))
     ax = fig.add_subplot(211)
@@ -431,16 +447,26 @@ def BayesProgressPlot(Record):
 
 ####### X DIMENSION #######
 
-def X_DimensionPlot(Prob_Real_X,Prob_Model_X,Prob_Model2_X):
+def X_DimensionPlot(Prob_Real_X,Prob_Model_X,Prob_Model2_X,VMAX=0.30,FONTSIZE=20):
     """
-    In Development
+    Plot the X dimensional maringal distributions for real data and two models.
+    
+    Input
+    -----
+    Prob_Real_X:
+    Prob_Model1_X:
+    Prob_Model2_X:
+
+    Output
+    ------
+    Plot
+
+    Options
+    _______
+    VMAX: Default = 0.30
+    FONTSIZE: Control the fontsize.  Default = 20.
     
     """
-
-    FONTSIZE = 20
-    VMAX = 0.35
-    VMAX_Y = 0.6
-    VMAX_Z = 0.85
     fig = plt.figure(figsize=(15,4.25))
 
     
@@ -477,16 +503,30 @@ def X_DimensionPlot(Prob_Real_X,Prob_Model_X,Prob_Model2_X):
 ##### Y&Z DIMENSIONS #####
 
 ##### COLOR BAR ######
-def YZ_DimensionPlot(Prob_Real_Y,Prob_Real_Z,Prob_Model_Y,Prob_Model_Z,Prob_Model2_Y,Prob_Model2_Z):
+def YZ_DimensionPlot(Prob_Real_Y,Prob_Real_Z,Prob_Model_Y,Prob_Model_Z,Prob_Model2_Y,Prob_Model2_Z,VMAX_Y=0.5,VMAX_Z=0.7,
+                     FONTSIZE=20):
     """
-    In Development
-    """
+    Plot the Y and Z dimensional maringal distributions for real data and two models.
+    
+    Input
+    -----
+    Prob_Real_Y:
+    Prob_Real_Z:
+    Prob_Model1_Y:
+    Prob_Model1_Z:
+    Prob_Model2_Y:
+    Prob_Model2_Z:
 
-    FONTSIZE = 20
-    VMAX = 0.35
-    VMAX_Y = 0.6
-    VMAX_Z = 0.85
-    fig = plt.figure(figsize=(15,4.25))
+    Output
+    ------
+    Plot
+
+    Options
+    _______
+    VMAX_Y: Default = 0.5
+    VMAX_Z: Default = 0.7
+    FONTSIZE: Control the fontsize.  Default = 20
+    """
 
     fig2 = plt.figure(figsize=(15,8.5))
     ax11 = fig2.add_subplot(244)
@@ -553,3 +593,38 @@ def YZ_DimensionPlot(Prob_Real_Y,Prob_Real_Z,Prob_Model_Y,Prob_Model_Z,Prob_Mode
     plt.tight_layout()
     plt.show()
 
+
+
+def PropDownstreamPlot(Real_Downstream,Model1_Downstream,Model2_Downstream,FONTSIZE = 25,
+                       XLIMIT = [30,300], YLIMIT = [0.5,1.01]):
+    """
+    Plot proportion downstream for observed data and two models
+
+    Input
+    -----
+    Real_Downstream
+    Model1_Downstream
+    Model2_Downstream
+
+    Output
+    ------
+    Plot
+
+    Options
+    -------
+    FONTSIZE: Default = 25.
+    XLIMIT: Defalut = [30,300]
+    YLIMIT: Default = [0.5,1.01]
+    """
+    plt.figure()
+    plt.plot(np.arange(30,301,30),Real_Downstream,'k--',linewidth=3)
+    plt.plot(np.arange(30,301,30),Model1_Downstream,'g--',linewidth=3)
+    plt.plot(np.arange(30,301,30),Model2_Downstream,'r--',linewidth=3)
+    plt.ylabel('proportion downstream',fontsize=FONTSIZE)
+    plt.xlabel('time (s)',fontsize=FONTSIZE)
+    plt.xticks(fontsize=FONTSIZE)
+    plt.yticks(fontsize=FONTSIZE)
+    plt.xlim(XLIMIT)
+    plt.ylim(YLIMIT)
+    plt.tight_layout()
+    plt.show()

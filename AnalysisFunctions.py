@@ -35,16 +35,20 @@ def StandardizeData(Data, Max_X, Max_YZ, Loc = np.array([0,1,2]) ):
     
     if max(X) > 68.6:
         print 'Error!! X data should not exceed 68.5 cm'
+        errors = np.sum(X[X> 68.5])
+        X[X > 68.5] = 68.5
+        print errors, ' errors fixed, consider fixing data.'
+        
     elif max(max(Y),max(Z)) > 16.0:
-        print 'Error!! Y and Z data should not exceed 15.6 cm'
-        #else:
-        #if test_X > 30:
-        #    Max_X = 68.0
-        #    Max_YZ = 15.0
-        #else:
-        #    Max_X = 27.0
-        #    Max_YZ = 6.0
-    
+        print 'Error!! Y and Z data should not exceed 16.0 cm'
+        errorsY = np.sum(Y[Y > 16.0])
+        errorsZ = np.sum(Z[Z > 16.0])
+        Y[Y > 16.0] = 16.0
+        Z[Z > 16.0] = 16.0
+        print errorsY, ' Y dimension errors and ', errorsZ, 'Z dimension errors fixed. Consider fixing data.'
+
+    ####### Need to develop here a heuristic to guess the scale (max values) used for each data set.
+
     # Make sure that min = 1.0
     X = X + (1.0 - min(X))
     Y = Y + (1.0 - min(Y))
@@ -221,10 +225,10 @@ def MarginalProbabilityDist(Data,TimePoints = 10, Bin_Resolution = np.array([27.
 #### STATISTICAL ANALYSES ####
 ##############################
 
-def KL_Diverg(Real_Data, Model_Data, Dim=0, BIN_RESOLUTION=75,PRINT=1):
+def KL_Diverg(P, Q, Dim=0, BIN_RESOLUTION=50, INDEPENDENCE_TEST=0,FUNCTION = 'variance',PRINT=1):
     """
     Computes the Kullback-Leibler Divergence between two probability distributions
-    KL_Diverg = Sum( P * log2( P/ Model) )
+    KL_Diverg = Sum( P * log2( P/ Q) )
 
     for more info,
     see: http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
@@ -232,8 +236,8 @@ def KL_Diverg(Real_Data, Model_Data, Dim=0, BIN_RESOLUTION=75,PRINT=1):
     
     Input
     -----
-    Real_Data: The distribution you are fitting to
-    Model_Data: The model you are testing
+    P: The observed distribution
+    Q: The model distribution you are testing
 
     Output
     ------
@@ -242,46 +246,74 @@ def KL_Diverg(Real_Data, Model_Data, Dim=0, BIN_RESOLUTION=75,PRINT=1):
     Options
     -------
     Dim: the dimension of data you are look at, default = 0
-    BIN_RESOLUTION: the bin size for probability calculation, default = 75
+    BIN_RESOLUTION: the bin size for probability calculation, default = 50
+    INDEPENDENCE_TEST: if 1 test independence of two variables. Default = 0.
+    FUNCTION: Decide which moment to use when first processing the data: 'mean' or 'variance'. Default = 'variance' (for now).
     PRINT: option of printing the results to the console, deflault = 0, 1 will print
     """
+    if FUNCTION == 'mean':
+        Func = np.mean
+    elif FUNCTION == 'variance':
+        Func = np.var
+
+    if len(P.shape) > 1:
+        P = P[:,Dim]
+    elif len(P.shape) == 1:
+        P = P[:]
+
+    if len(Q.shape) > 1:
+        Q = Q[:,Dim]
+    elif len(P.shape) == 1:
+        Q = Q[:]
     
-    P_Data = np.zeros(len(Real_Data[:,Dim])/10.)
-    for i in range(0,int(len(Real_Data[:,Dim])/10.)):
-        P_Data[i] = np.var(Real_Data[:,Dim][10.*i:(10.*i)+10.])
+    Ptemp = np.zeros(len(P)/10.)
+    for i in range(0,int(len(P)/10.)):
+        Ptemp[i] = Func(P[10.*i:(10.*i)+10.])
 
-    P_Model = np.zeros(len(Model_Data[:,Dim])/10.)
-    for i in range(0,int(len(Model_Data[:,Dim])/10.)):
-        P_Model[i] = np.var(Model_Data[:,Dim][10.*i:(10.*i)+10.])
+    Qtemp = np.zeros(len(Q)/10.)
+    for i in range(0,int(len(Q)/10.)):
+        Qtemp[i] = Func(Q[10.*i:(10.*i)+10.])
+        
+    
+    BINS = np.linspace(min( min(Ptemp),min(Qtemp) ),max (max(Ptemp),max(Qtemp)),BIN_RESOLUTION)
+                
+    P,b = np.histogram(Ptemp,BINS)
+    Q,b = np.histogram(Qtemp,BINS)
 
 
-    ## Compute Probabilities
+    # avoid divide by zeros
+    Q = Q + 1.0
+    P = P + 1.0
 
-    BINS = np.linspace(min( min(P_Data),min(P_Model) ),
-                        max (max(P_Data),max(P_Model)),BIN_RESOLUTION)
+    # normalizing the P and Qs    
+    Q = Q / np.sum(Q)
+    P = P / np.sum(P)
+        
+    # decide whether computing standard KL-diverg or KL-diverge to assess independence of two variable.
+    if INDEPENDENCE_TEST == 0:
 
-    # find distributions
-    Prob_Data,q = np.histogram(P_Data,bins=BINS)
-    Prob_Model,q = np.histogram(P_Model,bins=BINS)
+        temp =  P*np.log2(P/Q);
 
-    # prevent zeros in division 
-    Prob_Data += 1.
-    Prob_Model += 1.
+        # decide if one or two dimensional case:
+        if Q.shape[0] == 1:
+            dist = np.sum(temp,axis=1)
+        elif Q.shape[0] == P.shape[0]:
+            dist = np.sum(temp)
 
-    # find probabilities
-    Prob_Data = np.true_divide(Prob_Data,sum(Prob_Data))
-    Prob_Model = np.true_divide(Prob_Model,sum(Prob_Model))
+    if INDEPENDENCE_TEST == 1: # testing independence
 
-    # compute KL-Divergence between Model and Observed Distributions.
-    KLdiverg_DataVsModel = 0
-
-    for i in range(0,len(BINS)-1):
-        KLdiverg_DataVsModel += Prob_Data[i]*np.log2(Prob_Data[i]/Prob_Model[i])
+        JointDist = np.outer(Q,P)
+        MargQ = np.sum(JointDist,axis=0)
+        MargP = np.sum(JointDist,axis=1)
+        MargQP = np.outer(MargQ,MargP)
+        
+        temp = JointDist*np.log2(JointDist/MargQP)
+        dist = np.sum(temp)
 
     if PRINT == 1:
-        print 'KL-diverg = ', KLdiverg_DataVsModel
+        print 'KL-diverg = ', dist
 
-    return KLdiverg_DataVsModel
+    return dist
 
 
 
@@ -298,9 +330,9 @@ def BayesHypothesisTest(Observed_Data,Model1_Data,Model2_Data, PRINT = 1,RECORD 
 
     Output
     ------
-    BF_01: Model 1 compared to a uniform distribution
-    BF_02: Model 2 compared to a uniform distribution
-    BF_12: Model 1 compared to Model 1
+    BF_01: Model 1 compared to a uniform distribution. In natural log units.
+    BF_02: Model 2 compared to a uniform distribution.  In natural log units.
+    BF_12: Model 1 compared to Model 1.  In natural log units.
 
     Options
     -------
@@ -347,9 +379,9 @@ def BayesHypothesisTest(Observed_Data,Model1_Data,Model2_Data, PRINT = 1,RECORD 
         if RECORD == 1:
             Record[pos-1,:] = P_M2_Loc,P_M1_Loc,P_M0_Loc,P_Model2,P_Model1,P_Uniform
 
-    BF_01 = P_M0_Loc/P_M1_Loc
-    BF_02 = P_M0_Loc/P_M2_Loc
-    BF_12 = P_M1_Loc/P_M2_Loc
+    BF_01 = np.log(P_M0_Loc/P_M1_Loc)
+    BF_02 = np.log(P_M0_Loc/P_M2_Loc)
+    BF_12 = np.log(P_M1_Loc/P_M2_Loc)
 
     if PRINT == 1:
         print 'BF_01:',BF_01,'BF_12',BF_12,'BF_02',BF_02

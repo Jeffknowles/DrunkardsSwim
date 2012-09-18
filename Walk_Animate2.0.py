@@ -10,6 +10,25 @@ import plot_functions
 
 LATLINE = True
 FLOW_DYNAMICS = 'JEB'
+<<<<<<< HEAD
+frogNoFlow,orient = wlk.randwalk(300,0.1, 0, np.array([0.34, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
+frogFlow,orient = wlk.randwalk(300,0.1, 0, frogNoFlow[-1],LATLINE,FLOW_DYNAMICS)
+frog = np.zeros((len(frogNoFlow)*2,3))
+frog[0:len(frogNoFlow),:] = frogNoFlow
+frog[len(frogNoFlow):len(frog),:] = frogFlow
+frog = frog*100
+
+LATLINE = 1
+frog2NoFlow, orient = wlk.randwalk(300,0.1, 0, np.array([0.34, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
+frog2Flow,orient = wlk.randwalk(300,0.1, 0, frog2NoFlow[-1],LATLINE,FLOW_DYNAMICS)
+frog2 = np.zeros((len(frog2NoFlow)*2,3))
+frog2[0:len(frog2NoFlow),:] = frog2NoFlow
+frog2[len(frog2NoFlow):len(frog2),:] = frog2Flow
+frog2 = frog2*100
+
+flow = np.ones(len(frog2),'int')
+flow[0:len(frog2NoFlow)] = flow[0:len(frog2NoFlow)]*0
+=======
 data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE, flow_version = FLOW_DYNAMICS)
 data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],latline = LATLINE, flow_version = FLOW_DYNAMICS)
 
@@ -28,6 +47,7 @@ frogtrack_2 = frogtrack_2*100
 
 flow = np.ones(len(frogtrack_2),'int')
 flow[0:len(data_nf['track'])] = flow[0:len(data_nf['track'])]*0
+>>>>>>> a92d3d17455563935190d8f655868d4762ab9571
 speed = np.array(['0 cm/s','10 cm/s'],dtype='str')
 
 class SubplotAnimation(animation.TimedAnimation):

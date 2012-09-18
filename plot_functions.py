@@ -10,24 +10,26 @@ def plot_tank(axes = None):
         axes.set_ylim(0, 15)
         axes.set_zlim(0, 15)
 
-    color = 'gray'
-
+    c1 = '.25' 
+    c2 = '.5'
     box = {}
-    box['bottom1'] = Line3D([0, 68], [0, 0], [0,0], color = color, linewidth = 2)
-    box['bottom2'] = Line3D([0, 0], [0, 15], [0,0], color = color, linewidth = 2)
-    box['bottom3'] = Line3D([0, 68], [15, 15], [0,0], color = color, linewidth = 2)
-    box['bottom4'] = Line3D([68, 68], [0, 15], [0,0], color = color, linewidth = 2)
-    box['top1'] = Line3D([0, 68], [0, 0], [15, 15], color = color, linewidth = 2)
-    box['top2'] = Line3D([0, 0], [0, 15], [15, 15], color = color, linewidth = 2)
-    box['top3'] = Line3D([0, 68], [15, 15], [15, 15], color = color, linewidth = 2)
-    box['top4'] = Line3D([68, 68], [0, 15], [15, 15], color = color, linewidth = 2)
-    box['side1'] = Line3D([0, 0], [0, 0], [0, 15], color = color, linewidth = 2)
-    box['side2'] = Line3D([68, 68], [0, 0], [0, 15], color = color, linewidth = 2)
-    box['side3'] = Line3D([68, 68], [15, 15], [0, 15], color = color, linewidth = 2)
-    box['side4'] = Line3D([0, 0], [15, 15], [0, 15], color = color, linewidth = 2)
+    box['bottom1'] = Line3D([0, 68], [0, 0], [0,0], color = c1, linewidth = 2)
+    box['bottom2'] = Line3D([0, 0], [0, 15], [0,0], color = c2, linewidth = 2)
+    box['bottom3'] = Line3D([0, 68], [15, 15], [0,0], color = c2, linewidth = 2)
+    box['bottom4'] = Line3D([68, 68], [0, 15], [0,0], color = c1, linewidth = 2)
+    box['1top1'] = Line3D([0, 68], [0, 0], [15, 15], color = c1, linewidth = 2)
+    box['1top2'] = Line3D([0, 0], [0, 15], [15, 15], color = c1, linewidth = 2)
+    box['1top3'] = Line3D([0, 68], [15, 15], [15, 15], color = c1, linewidth = 2)
+    box['1top4'] = Line3D([68, 68], [0, 15], [15, 15], color = c1, linewidth = 2)
+    box['1side1'] = Line3D([0, 0], [0, 0], [0, 15], color = c1, linewidth = 2)
+    box['1side2'] = Line3D([68, 68], [0, 0], [0, 15], color = c1, linewidth = 2)
+    box['1side3'] = Line3D([68, 68], [15, 15], [0, 15], color = c2, linewidth = 2)
+    box['1side4'] = Line3D([0, 0], [15, 15], [0, 15], color = c2, linewidth = 2)
 
     for key in box:
         axes.add_line(box[key])
+
+    axes.view_init(18, -95)
 
     return axes
 

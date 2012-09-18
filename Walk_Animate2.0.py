@@ -57,14 +57,16 @@ class SubplotAnimation(animation.TimedAnimation):
         plot_functions.plot_tank(ax1)
         plot_functions.plot_tank(ax2)
 
-        #ax1.set_xlabel('x')
-        #ax1.set_ylabel('y')
-        #ax1.set_zlabel('z')
+        ax1.set_xlabel('x')
+        ax1.set_ylabel('y')
+        ax1.set_zlabel('z')
 
-        #ax2.set_xlabel('x')
-        #ax2.set_ylabel('y')
-        #ax2.set_zlabel('z')
+        ax2.set_xlabel('x')
+        ax2.set_ylabel('y')
+        ax2.set_zlabel('z')
         
+        ax1.view_init(18, -95)
+        ax2.view_init(18, -95)
 
         self.line1 = Line3D([], [], [], color='black')
         self.line1a = Line3D([], [], [], color='red', linewidth=2)
@@ -87,13 +89,13 @@ class SubplotAnimation(animation.TimedAnimation):
         ax1.set_ylim(0, 15)
         ax1.set_zlim(0, 15)
         ax1.set_title('NO Lateral Line Model')
-        #ax1.set_aspect('equal')
+        ax1.set_aspect('equal')
 
         ax2.set_xlim(0, 68)
         ax2.set_ylim(0, 15)
         ax2.set_zlim(0, 15)
         ax2.set_title('Lateral Line Model')
-        #ax1.set_aspect('equal')
+        ax2.set_aspect('equal')
         
         ax1.set_xticks([0, 68])
         ax1.set_yticks([])
@@ -103,7 +105,8 @@ class SubplotAnimation(animation.TimedAnimation):
         ax2.set_yticks([])
         ax2.set_zticks([0, 15])
        
-        
+        plt.show()
+
         animation.TimedAnimation.__init__(self, fig, interval=50, blit=False)
 
     def _draw_frame(self, framedata):

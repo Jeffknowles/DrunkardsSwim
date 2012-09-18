@@ -43,14 +43,9 @@ for i in range(0,len(flowspeed)):
     FINALPOSITION = np.zeros((NUMFROG,4))
 
     for j in range(0,NUMFROG):
-<<<<<<< HEAD
-    #(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION)  - Version refers to flow dynamics.
-        frog,orient = wlk.randwalk(300,0.1, 0, np.array([0.34, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
-
-=======
         #(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION)  - Version refers to flow dynamics.
         run_data = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE,flow_version = FLOW_DYNAMICS)
->>>>>>> a92d3d17455563935190d8f655868d4762ab9571
+
         frogData = np.zeros((10,4))
     # Here we are extracting only the position at 30 second intervals.
         for i in range(0,10):
@@ -72,7 +67,7 @@ for i in range(0,len(flowspeed)):
         ipos = FINALPOSITION[j,:] # this indicates initial position which is the last recorded
     #position for each tadpole under 0cm/s, thus creating a continuous
     #trial, just like the pulsed flow experiments we run.
-        run_data = wlk.randwalk(300,0.1, FLOWSPEED, ipos[0:3],LATLINE,FLOW_DYNAMICS)
+        run_data = wlk.randwalk(300,0.1, FLOWSPEED, ipos[0:3],latline = LATLINE, flow_version = FLOW_DYNAMICS)
         frogData = np.zeros((10,4))
 
         for i in range(0,10):

@@ -10,8 +10,8 @@ import plot_functions
 
 LATLINE = True
 FLOW_DYNAMICS = 'JEB'
-data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
-data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],LATLINE,FLOW_DYNAMICS)
+data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE, flow_version = FLOW_DYNAMICS)
+data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],latline = LATLINE, flow_version = FLOW_DYNAMICS)
 
 frogtrack_1 = np.zeros((len(data_nf['track'])*2,3))
 frogtrack_1[0:len(data_nf['track']),:] = data_nf['track']
@@ -19,8 +19,8 @@ frogtrack_1[len(data_nf['track'])-1:-1,:] = data_f['track']
 frogtrack_1 = frogtrack_1*100
 
 LATLINE = True
-data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
-data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],LATLINE,FLOW_DYNAMICS)
+data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE, flow_version = FLOW_DYNAMICS)
+data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],latline = LATLINE, flow_version = FLOW_DYNAMICS)
 frogtrack_2 = np.zeros((len(data_nf['track'])*2,3))
 frogtrack_2[0:len(data_nf['track']), :] = data_nf['track']
 frogtrack_2[len(data_nf['track'])-1:-1, :] = data_f['track']

@@ -108,7 +108,7 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
     flow_rate = np.zeros((round(simlength/binsize,1)))
     Vll = np.zeros((round(simlength/binsize,1)))
     position[0,:] = Iposition
-    
+
     # setup counters
     turncount = 0
     bincount = 0
@@ -153,27 +153,24 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
                     
         # Calculate Thrust (dimensional)
         if movecount < SWIM_LEN/binsize: # if in swimming state, swimm towards flow
-            thrust = np.array([8e-5, 
+            Fthrust = np.array([8e-5, 
                             np.sin(theta)*np.sin(phi)*power,
                             np.cos(phi)*power])
             movecount += 1
         elif movecount >= SWIM_LEN/binsize: # otherwise swim normally
-            thrust = np.array([np.cos(theta)*np.sin(phi)*power,
+            Fthrust = np.array([np.cos(theta)*np.sin(phi)*power,
                                np.sin(theta)*np.sin(phi)*power, 
                                np.cos(phi)*power])
     
         #Calculate Drag
-        #S= np.linalg.norm(dCURRENTvelocity - velocity[bincount-1,:]) ##find apparent curr. magnitude
-        if state is 1:
-            #Fdrag=((1/2.)*area*cdrag*S**2) ## caluclate drag force magnitude
-            Fdrag= drag*(local_current_vel - velocity[bincount-1,:])#/S
-            if any(np.isnan(Fdrag)):
-                Fdrag=0
-        elif state is 0:
-            Fdrag = drag*(-velocity[bincount-1,:])
+        s = np.linalg.norm(local_current_vel - velocity[bincount-1,:]) ##find apparent curr. magnitude
+        d = (0.5) * area * cdrag * s**2 # caclulate drag force magnitude
+        Fdrag = np.array([np.cos(theta)*np.sin(phi)*d, np.sin(theta)*np.sin(phi)*d, np.cos(phi)*d]) # calculate the drag vector
+        
+        #Fdrag= drag*(local_current_vel - velocity[bincount-1,:])#/S
 
         # caluclate force
-        F = (thrust.flatten() + gravity * mass + Fdrag)
+        F = (Fthrust.flatten() + Fdrag.flatten() + gravity * mass)
         # integrate    
         velocity[bincount,:] = velocity[bincount-1] + F*binsize/mass # Update Velocity 
         position[bincount,:] = position[bincount-1] + (velocity[bincount,:]*binsize) # Update Position

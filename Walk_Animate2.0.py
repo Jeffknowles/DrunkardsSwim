@@ -4,10 +4,13 @@ import mpl_toolkits.mplot3d.axes3d
 from mpl_toolkits.mplot3d.art3d import Line3D
 import matplotlib.animation as animation
 import matplotlib.patches as patches
-import walkfunction as wlk
 
-LATLINE = 0
+import walkfunction as wlk
+import plot_functions
+
+LATLINE = True
 FLOW_DYNAMICS = 'JEB'
+<<<<<<< HEAD
 frogNoFlow,orient = wlk.randwalk(300,0.1, 0, np.array([0.34, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
 frogFlow,orient = wlk.randwalk(300,0.1, 0, frogNoFlow[-1],LATLINE,FLOW_DYNAMICS)
 frog = np.zeros((len(frogNoFlow)*2,3))
@@ -25,6 +28,26 @@ frog2 = frog2*100
 
 flow = np.ones(len(frog2),'int')
 flow[0:len(frog2NoFlow)] = flow[0:len(frog2NoFlow)]*0
+=======
+data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE, flow_version = FLOW_DYNAMICS)
+data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],latline = LATLINE, flow_version = FLOW_DYNAMICS)
+
+frogtrack_1 = np.zeros((len(data_nf['track'])*2,3))
+frogtrack_1[0:len(data_nf['track']),:] = data_nf['track']
+frogtrack_1[len(data_nf['track'])-1:-1,:] = data_f['track']
+frogtrack_1 = frogtrack_1*100
+
+LATLINE = True
+data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE, flow_version = FLOW_DYNAMICS)
+data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],latline = LATLINE, flow_version = FLOW_DYNAMICS)
+frogtrack_2 = np.zeros((len(data_nf['track'])*2,3))
+frogtrack_2[0:len(data_nf['track']), :] = data_nf['track']
+frogtrack_2[len(data_nf['track'])-1:-1, :] = data_f['track']
+frogtrack_2 = frogtrack_2*100
+
+flow = np.ones(len(frogtrack_2),'int')
+flow[0:len(data_nf['track'])] = flow[0:len(data_nf['track'])]*0
+>>>>>>> a92d3d17455563935190d8f655868d4762ab9571
 speed = np.array(['0 cm/s','10 cm/s'],dtype='str')
 
 class SubplotAnimation(animation.TimedAnimation):
@@ -36,13 +59,13 @@ class SubplotAnimation(animation.TimedAnimation):
         ax2 = fig.add_subplot(2, 1, 2,projection='3d')
         
         self.t = np.arange(0,6000)
-        self.x = frog[self.t,0]
-        self.y = frog[self.t,1]
-        self.z = frog[self.t,2]
+        self.x = frogtrack_1[self.t,0]
+        self.y = frogtrack_1[self.t,1]
+        self.z = frogtrack_1[self.t,2]
         
-        self.x2 = frog2[self.t,0]
-        self.y2 = frog2[self.t,1]
-        self.z2 = frog2[self.t,2]
+        self.x2 = frogtrack_2[self.t,0]
+        self.y2 = frogtrack_2[self.t,1]
+        self.z2 = frogtrack_2[self.t,2]
         #self.flow = flow[self.t]
         
         ax1.pbaspect = [1.4, 0.4, 0.4]
@@ -50,6 +73,9 @@ class SubplotAnimation(animation.TimedAnimation):
 
         ax1.text2D(0.04, 0.65, '0 cm/s', fontsize=18, transform=ax1.transAxes)
         ax2.text2D(0.04, 0.65, '0 cm/s', fontsize=18, transform=ax2.transAxes)
+
+        plot_functions.plot_tank(ax1)
+        plot_functions.plot_tank(ax2)
 
         #ax1.set_xlabel('x')
         #ax1.set_ylabel('y')
@@ -59,6 +85,7 @@ class SubplotAnimation(animation.TimedAnimation):
         #ax2.set_ylabel('y')
         #ax2.set_zlabel('z')
         
+
         self.line1 = Line3D([], [], [], color='black')
         self.line1a = Line3D([], [], [], color='red', linewidth=2)
         self.line1e = Line3D([], [], [], color='red', marker='o', markeredgecolor='r')
@@ -80,12 +107,14 @@ class SubplotAnimation(animation.TimedAnimation):
         ax1.set_ylim(0, 15)
         ax1.set_zlim(0, 15)
         ax1.set_title('NO Lateral Line Model')
+        #ax1.set_aspect('equal')
 
         ax2.set_xlim(0, 68)
         ax2.set_ylim(0, 15)
         ax2.set_zlim(0, 15)
         ax2.set_title('Lateral Line Model')
-
+        #ax1.set_aspect('equal')
+        
         ax1.set_xticks([0, 68])
         ax1.set_yticks([])
         ax1.set_zticks([0, 15])
@@ -95,7 +124,7 @@ class SubplotAnimation(animation.TimedAnimation):
         ax2.set_zticks([0, 15])
        
         
-        animation.TimedAnimation.__init__(self, fig, interval=50, blit=True)
+        animation.TimedAnimation.__init__(self, fig, interval=50, blit=False)
 
     def _draw_frame(self, framedata):
         i = framedata

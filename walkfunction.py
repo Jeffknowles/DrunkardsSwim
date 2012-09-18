@@ -24,10 +24,6 @@ turn_lambda = 1 # average length of time between turns
 sda_t = 0.1*np.pi # standard deviation of turning angles for normal turning dist
 sda_p = 0.1*np.pi
 
-# initial orientation angles
-theta = 0 
-phi = 0
-
 # Tank Boundaries
 bounded = True        ## Turn boundries on or off (True or False)
 min_bounds = np.array([0, 0, 0])       ## minimum boundries
@@ -37,12 +33,9 @@ max_bounds = np.array([0.685, 0.15, 0.15])## maximum boundries
 gravity = np.array([0, 0, -.05])
 
 # set lateral line model params
-SWIM_LEN = 0 # starting value
-movecount = 0 # starting value
-TAUlat = 0.1 # increasing slows spiking (time constant of neuron)
-latDOT = 0.0 # starting value (resting potential)
-latRESET = 0 # reset potential
-latCUT = 1 # spike threshold
+lat_tau = 0.1 # increasing slows spiking (time constant of neuron)
+lat_reset = 0 # reset potential
+lat_thresh = 1 # spike threshold
 k_ = 0.006 # decreasing causes increased spiking
 
 ###################
@@ -94,6 +87,19 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
         current_plane = generate_current_plane(flow_version)
         current_plane = current_plane * flow_speed*0.01 # convert cm/s into m/s
 
+    # set initial orientation angles
+    theta = 0 
+    phi = 0
+
+    # setup state records
+    state = 0
+    period = 0
+
+    # setup lateral line state records
+    SWIM_LEN = 0 # starting value
+    movecount = 0 # starting value
+    lat_v = 0.0 # starting value (resting potential)
+
     # Preallocate recording variables
     time = np.arange(0,round(simlength/binsize)) * binsize
     velocity = np.zeros((round(simlength/binsize),ndim))
@@ -102,10 +108,8 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
     flow_rate = np.zeros((round(simlength/binsize,1)))
     Vll = np.zeros((round(simlength/binsize,1)))
     position[0,:] = Iposition
-
-    # Setup counters and state record
-    state = 0
-    period = 0
+    
+    # setup counters
     turncount = 0
     bincount = 0
 
@@ -131,19 +135,19 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
         if flow_on:
             y_dot = int(position[bincount-1][1]*39.37)
             z_dot = int(position[bincount-1][2]*39.37)
-            current_x = current_plane[y_dot][z_dot]
-            i_current_vel = [current_x, 0,0]
+            local_current_x = current_plane[y_dot][z_dot]
+            local_current_vel = [local_current_x, 0,0]
         else:
-            current_x = 0
-            i_current_vel = [0, 0, 0]
-        flow_rate[bincount] = current_x
+            local_current_x = 0
+            local_current_vel = [0, 0, 0]
+        flow_rate[bincount] = local_current_x
 
         # lateral line model
         if latline:
-            latDOT += (current_x + k_*(latDOT))*binsize/TAUlat
-            Vll[bincount] = latDOT
-        if latDOT >= latCUT:
-            latDOT = latRESET
+            lat_v += (local_current_x + k_*(lat_v))*binsize/lat_tau
+            Vll[bincount] = lat_v
+        if lat_v >= lat_thresh:
+            lat_v = lat_reset
             SWIM_LEN = 0.25 + np.random.random(1)*1.75
             movecount = 0
                     
@@ -162,7 +166,7 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
         #S= np.linalg.norm(dCURRENTvelocity - velocity[bincount-1,:]) ##find apparent curr. magnitude
         if state is 1:
             #Fdrag=((1/2.)*area*cdrag*S**2) ## caluclate drag force magnitude
-            Fdrag= drag*(i_current_vel - velocity[bincount-1,:])#/S
+            Fdrag= drag*(local_current_vel - velocity[bincount-1,:])#/S
             if any(np.isnan(Fdrag)):
                 Fdrag=0
         elif state is 0:

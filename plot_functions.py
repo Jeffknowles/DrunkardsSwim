@@ -46,6 +46,8 @@ def plot_track3d(track, axes = None):
     track = track * 100
     track_plot = Line3D(track[:,0], track[:, 1], track[:, 2], color = 'black', linewidth = 2)
     axes.add_line(track_plot)
+    axes.pbaspect = [1, 5, 1]
+    axes.set_aspect('equal')
     return axes
     
 def plot_xdata(data):

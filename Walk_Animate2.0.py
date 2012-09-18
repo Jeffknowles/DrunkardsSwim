@@ -33,7 +33,7 @@ speed = np.array(['0 cm/s','10 cm/s'],dtype='str')
 
 class SubplotAnimation(animation.TimedAnimation):
     def __init__(self):
-        fig = plt.figure(figsize=(10,8))
+        fig = plt.figure(facecolor = 'w', figsize = [12, 6])
         fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
         
         ax1 = fig.add_subplot(2, 1, 1,projection='3d')

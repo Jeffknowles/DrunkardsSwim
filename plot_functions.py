@@ -10,26 +10,29 @@ def plot_tank(axes = None):
         axes.set_ylim(0, 15)
         axes.set_zlim(0, 15)
 
-    c1 = '.25' 
-    c2 = '.5'
+    c1 = '.3' 
+    c2 = '.6'
     box = {}
     box['bottom1'] = Line3D([0, 68], [0, 0], [0,0], color = c1, linewidth = 2)
     box['bottom2'] = Line3D([0, 0], [0, 15], [0,0], color = c2, linewidth = 2)
     box['bottom3'] = Line3D([0, 68], [15, 15], [0,0], color = c2, linewidth = 2)
     box['bottom4'] = Line3D([68, 68], [0, 15], [0,0], color = c1, linewidth = 2)
-    box['1top1'] = Line3D([0, 68], [0, 0], [15, 15], color = c1, linewidth = 2)
-    box['1top2'] = Line3D([0, 0], [0, 15], [15, 15], color = c1, linewidth = 2)
-    box['1top3'] = Line3D([0, 68], [15, 15], [15, 15], color = c1, linewidth = 2)
-    box['1top4'] = Line3D([68, 68], [0, 15], [15, 15], color = c1, linewidth = 2)
-    box['1side1'] = Line3D([0, 0], [0, 0], [0, 15], color = c1, linewidth = 2)
-    box['1side2'] = Line3D([68, 68], [0, 0], [0, 15], color = c1, linewidth = 2)
-    box['1side3'] = Line3D([68, 68], [15, 15], [0, 15], color = c2, linewidth = 2)
-    box['1side4'] = Line3D([0, 0], [15, 15], [0, 15], color = c2, linewidth = 2)
+    box['top1'] = Line3D([0, 68], [0, 0], [15, 15], color = c1, linewidth = 2)
+    box['top2'] = Line3D([0, 0], [0, 15], [15, 15], color = c1, linewidth = 2)
+    box['top3'] = Line3D([0, 68], [15, 15], [15, 15], color = c1, linewidth = 2)
+    box['top4'] = Line3D([68, 68], [0, 15], [15, 15], color = c1, linewidth = 2)
+    box['side1'] = Line3D([0, 0], [0, 0], [0, 15], color = c1, linewidth = 2)
+    box['side2'] = Line3D([68, 68], [0, 0], [0, 15], color = c1, linewidth = 2)
+    box['side3'] = Line3D([68, 68], [15, 15], [0, 15], color = c2, linewidth = 2)
+    box['side4'] = Line3D([0, 0], [15, 15], [0, 15], color = c2, linewidth = 2)
 
-    for key in box:
+    keylist = box.keys()
+    keylist.sort()
+    for key in keylist:
         axes.add_line(box[key])
 
-    axes.view_init(18, -95)
+    axes.view_init(25, -105)
+    axes.set_axis_bgcolor('w')
 
     return axes
 
@@ -43,6 +46,7 @@ def plot_track3d(track, axes = None):
     track = track * 100
     track_plot = Line3D(track[:,0], track[:, 1], track[:, 2], color = 'black', linewidth = 2)
     axes.add_line(track_plot)
+    return axes
     
 def plot_xdata(data):
     fig = plt.figure()
@@ -74,6 +78,8 @@ def plot_xdata(data):
         a[4].set_ylim(0, 1)
         a[4].set_xlabel('Time (s)')
         a[4].set_ylabel('LL Potential')
+
+    return a
 
 
 

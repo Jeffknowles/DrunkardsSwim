@@ -1,24 +1,53 @@
 import numpy as np
 import scipy as sp
 
+###################
+# Model Parameteres
+###################
 
-## sub functions
-def randpick(TRANSMAT):
-    choice = np.random.random_integers(1,1000,1)
-    pick = 0 if choice[0] <= TRANSMAT[0]*1000 else 1
-    return pick
+# set number of dimensions in the simulation
+ndim = 3
 
-def orient_angle(x,y): ## relative to flow, away from flow = 180
-    if x >= 0 and y >= 0:
-        angle = np.arctan(x/y)*180/np.pi
-    if x >= 0 and y < 0:
-        angle = ((2*np.pi+np.arctan(x/y))*180/np.pi)-90
-    if x < 0 and y >= 0:
-        angle = (2*np.pi+np.arctan(x/y))*180/np.pi
-    if x < 0 and y < 0:
-        angle = (np.arctan(x/y)*180/np.pi)+90
-    return angle
+# define animal's size physical parameteres
+drag = 0.00075 # this is presently being used in lew of the cdrad and area
+area = 2e-4    # set the square area
+cdrag = 0.0287 # according to Liu et al 1997
+mass = 0.0004 
 
+# Behavioral state parameters
+state_power = np.array([1e-12, 2e-4]) # set power for each state
+TRANSMAT = np.array([[0.991, 0.009],  # define transition probability matrix for transitions among states
+                     [0.05, 0.95]])
+
+# Turning Parameters
+turn_lambda = 1 # average length of time between turns
+sda_t = 0.1*np.pi # standard deviation of turning angles for normal turning dist
+sda_p = 0.1*np.pi
+
+# initial orientation angles
+theta = 0 
+phi = 0
+
+# Tank Boundaries
+bounded = True        ## Turn boundries on or off (True or False)
+min_bounds = np.array([0, 0, 0])       ## minimum boundries
+max_bounds = np.array([0.685, 0.15, 0.15])## maximum boundries
+
+# Set Gravity (deps on bouyancy)
+gravity = np.array([0, 0, -.05])
+
+# set lateral line model params
+SWIM_LEN = 0 # starting value
+movecount = 0 # starting value
+TAUlat = 0.1 # increasing slows spiking (time constant of neuron)
+latDOT = 0.0 # starting value (resting potential)
+latRESET = 0 # reset potential
+latCUT = 1 # spike threshold
+k_ = 0.006 # decreasing causes increased spiking
+
+###################
+# Model Subfunctions
+###################
 def generate_current_plane(flow_version):
     if flow_version.lower() == 'new':
         current_plane = np.array([[ 0.08,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.15],
@@ -36,33 +65,26 @@ def generate_current_plane(flow_version):
               [ 0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
     return current_plane
 
+def randpick(TRANSMAT):
+    choice = np.random.random_integers(1,1000,1)
+    pick = 0 if choice[0] <= TRANSMAT[0]*1000 else 1
+    return pick
 
-## main function
+def orient_angle(x,y): ## relative to flow, away from flow = 180
+    if x >= 0 and y >= 0:
+        angle = np.arctan(x/y)*180/np.pi
+    if x >= 0 and y < 0:
+        angle = ((2*np.pi+np.arctan(x/y))*180/np.pi)-90
+    if x < 0 and y >= 0:
+        angle = (2*np.pi+np.arctan(x/y))*180/np.pi
+    if x < 0 and y < 0:
+        angle = (np.arctan(x/y)*180/np.pi)+90
+    return angle
+
+###################
+# Model Main Function
+###################
 def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_version = "JEB"):
-    # set number of dimensions
-    ndim = 3
-
-    # define animal's size and drag (according to Liu et al 1997)
-    area = 2e-4   ## set the square area
-    cdrag = 0.0287 ## from paper
-    mass = 0.0004
-
-    # Turning Parameters
-    turn_lambda = 1 # average length of time between turns
-    sda_t = 0.1*np.pi # standard deviation of turning angles for normal turning dist
-    sda_p = 0.1*np.pi
-
-    # initial orientation angles
-    theta = 0 
-    phi = 0
-
-    # Set boundries
-    bounded = True        ## Turn boundries on or off (True or False)
-    min_bounds = np.array([0, 0, 0])       ## minimum boundries
-    max_bounds = np.array([0.685, 0.15, 0.15])## maximum boundries
-
-    # Set Gravity (deps on bouyancy)
-    gravity = np.array([0, 0, -.05])
 
     # Set Flow
     if flow_speed == 0:
@@ -71,20 +93,6 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
         flow_on = True
         current_plane = generate_current_plane(flow_version)
         current_plane = current_plane * flow_speed*0.01 # convert cm/s into m/s
-
-    # set state parameters
-    state_power = np.array([1e-12, 2e-4]) # set power for each state
-    TRANSMAT = np.array([[0.991, 0.009],  # define transition probability matrix for transitions among states
-                         [0.05, 0.95]])
-
-    ## set lateral line model params
-    SWIM_LEN = 0 # starting value
-    movecount = 0 # starting value
-    TAUlat = 0.1 # increasing slows spiking (time constant of neuron)
-    latDOT = 0.0 # starting value (resting potential)
-    latRESET = 0 # reset potential
-    latCUT = 1 # spike threshold
-    k_ = 0.006 # decreasing causes increased spiking
 
     # Preallocate recording variables
     time = np.arange(0,round(simlength/binsize)) * binsize
@@ -96,11 +104,10 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
     position[0,:] = Iposition
 
     # Setup counters and state record
+    state = 0
     period = 0
     turncount = 0
     bincount = 0
-    state = 0
-    drag = 0.00075
 
     # MAIN LOOP 
     for ktime in range(0,int(simlength/binsize)-1): #(binsize,simlength,binsize):
@@ -188,6 +195,7 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
     return data
 
 
+# script to execute example
 if __name__ == "__main__":
     latline = True
     flow = 'JEB'

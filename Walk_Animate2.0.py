@@ -8,7 +8,7 @@ import walkfunction as wlk
 
 LATLINE = 0
 FLOW_DYNAMICS = 'JEB'
-frogNoFlow,orient = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
+frogNoFlow,orient = wlk.randwalk(300,0.1, 0, np.array([0.34, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
 frogFlow,orient = wlk.randwalk(300,0.1, 0, frogNoFlow[-1],LATLINE,FLOW_DYNAMICS)
 frog = np.zeros((len(frogNoFlow)*2,3))
 frog[0:len(frogNoFlow),:] = frogNoFlow
@@ -16,7 +16,7 @@ frog[len(frogNoFlow):len(frog),:] = frogFlow
 frog = frog*100
 
 LATLINE = 1
-frog2NoFlow, orient = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
+frog2NoFlow, orient = wlk.randwalk(300,0.1, 0, np.array([0.34, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
 frog2Flow,orient = wlk.randwalk(300,0.1, 0, frog2NoFlow[-1],LATLINE,FLOW_DYNAMICS)
 frog2 = np.zeros((len(frog2NoFlow)*2,3))
 frog2[0:len(frog2NoFlow),:] = frog2NoFlow

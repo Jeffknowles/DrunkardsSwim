@@ -44,7 +44,7 @@ for i in range(0,len(flowspeed)):
 
     for j in range(0,NUMFROG):
     #(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION)  - Version refers to flow dynamics.
-        frog,orient = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
+        frog,orient = wlk.randwalk(300,0.1, 0, np.array([0.34, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
 
         frogData = np.zeros((10,4))
     # Here we are extracting only the position at 30 second intervals.

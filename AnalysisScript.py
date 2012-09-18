@@ -90,11 +90,10 @@ if BayesHypothesisTest == 'On':
     Model1_3DProb = af.ProbabilityDist3D(Model1_Standard)
     Model2_3DProb = af.ProbabilityDist3D(Model2_Standard)
 
-# Not working
+# Plot natural log Bayes Factors.
 BF_01,BF_02,BF_12 = af.BayesHypothesisTest(Data_Standard,Model1_3DProb,Model2_3DProb)
 
 ## Plot data.
-
 
 # output of MarginalProbabilityDist is not quite right, particularly for Data_Standard
 
@@ -102,6 +101,8 @@ X_Data,Y_Data,Z_Data = af.MarginalProbabilityDist(Data_Standard)
 X_Model1,Y_Model1,Z_Model1 = af.MarginalProbabilityDist(Model1_Standard)
 X_Model2,Y_Model2,Z_Model2 = af.MarginalProbabilityDist(Model2_Standard)
 
+
+### Need to fix issues with Marginal Prob Dist.  Need more testing.  Perhaps just statistical dependence? KL-Divergence may help
 af.X_DimensionPlot(X_Data.T,X_Model1.T,X_Model2.T)
 af.YZ_DimensionPlot(Y_Data.T,Z_Data.T,Y_Model1.T,Z_Model1.T,Y_Model2.T,Z_Model2.T)
 

@@ -7,7 +7,7 @@ import walkfunction as wlk
 ##### USER INPUT BELOW #####
 ############################
 
-NUMFROG = 3000 # Number of tadpoles you would like to simulate.
+NUMFROG = 5 # Number of tadpoles you would like to simulate.
 TIME = 300 # This is the time of the simulation in seconds for each flow condition.
 FLOW_DYNAMICS = 'NEW' ## 'JEB' or 'NEW'
 
@@ -43,14 +43,13 @@ for i in range(0,len(flowspeed)):
     FINALPOSITION = np.zeros((NUMFROG,4))
 
     for j in range(0,NUMFROG):
-    #(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION)  - Version refers to flow dynamics.
-        frog,orient = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),LATLINE,FLOW_DYNAMICS)
-
+        #(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION)  - Version refers to flow dynamics.
+        run_data = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE,flow_version = FLOW_DYNAMICS)
         frogData = np.zeros((10,4))
     # Here we are extracting only the position at 30 second intervals.
         for i in range(0,10):
-            Data = frog[(i*300)+299,:]
-            Orient = orient[(i*300)+299]
+            Data = run_data['track'][(i*300)+299,:]
+            Orient = run_data['orientation'][(i*300)+299]
             frogData[i,:] = np.append(Data,Orient)
         
         FINALPOSITION[j,:] = frogData[9,:]
@@ -61,22 +60,18 @@ for i in range(0,len(flowspeed)):
     np.savetxt(NO_FLOW_CSV_FILE_NAME, FROGDATA, delimiter=',')
 
 ## This begins the FLOW simulation: 
-
     FROGDATA = np.zeros((NUMFROG*10,4))
 
     for j in range(0,NUMFROG):
-
         ipos = FINALPOSITION[j,:] # this indicates initial position which is the last recorded
     #position for each tadpole under 0cm/s, thus creating a continuous
     #trial, just like the pulsed flow experiments we run.
-        frog,orient = wlk.randwalk(300,0.1, FLOWSPEED, ipos[0:3],LATLINE,FLOW_DYNAMICS)
-
+        run_data = wlk.randwalk(300,0.1, FLOWSPEED, ipos[0:3],LATLINE,FLOW_DYNAMICS)
         frogData = np.zeros((10,4))
 
         for i in range(0,10):
-
-            Data = frog[(i*300)+299,:]
-            Orient = orient[(i*300)+299]
+            Data = run_data['track'][(i*300)+299,:]
+            Orient = run_data['orientation'][(i*300)+299]
             frogData[i,:] = np.append(Data,Orient)
     
         FROGDATA[(j+1)*10-10:(j+1)*10,:] = frogData

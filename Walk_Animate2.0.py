@@ -8,17 +8,21 @@ import matplotlib.patches as patches
 import walkfunction as wlk
 import plot_functions
 
+
+track_data = {}
+
+# generate all data w/ lateral line switched off
 LATLINE = True
 FLOW_DYNAMICS = 'JEB'
 data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE, flow_version = FLOW_DYNAMICS)
 data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],latline = LATLINE, flow_version = FLOW_DYNAMICS)
-
 frogtrack_1 = np.zeros((len(data_nf['track'])*2,3))
 frogtrack_1[0:len(data_nf['track']),:] = data_nf['track']
 frogtrack_1[len(data_nf['track'])-1:-1,:] = data_f['track']
 frogtrack_1 = frogtrack_1*100
 
-LATLINE = True
+# generate all data w/ lateral line switched on
+LATLINE = False
 data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE, flow_version = FLOW_DYNAMICS)
 data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],latline = LATLINE, flow_version = FLOW_DYNAMICS)
 frogtrack_2 = np.zeros((len(data_nf['track'])*2,3))
@@ -66,9 +70,6 @@ class SubplotAnimation(animation.TimedAnimation):
         ax2.set_ylabel('y')
         ax2.set_zlabel('z')
         
-        ax1.view_init(18, -95)
-        ax2.view_init(18, -95)
-
         self.line1 = Line3D([], [], [], color='black')
         self.line1a = Line3D([], [], [], color='red', linewidth=2)
         self.line1e = Line3D([], [], [], color='red', marker='o', markeredgecolor='r')
@@ -106,8 +107,6 @@ class SubplotAnimation(animation.TimedAnimation):
         ax2.set_yticks([])
         ax2.set_zticks([0, 15])
        
-        plt.show()
-
         animation.TimedAnimation.__init__(self, fig, interval=50, blit=False)
 
     def _draw_frame(self, framedata):
@@ -132,7 +131,6 @@ class SubplotAnimation(animation.TimedAnimation):
 
         self._drawn_artists = [self.line1, self.line1a, self.line1e,
                                self.line2, self.line2a, self.line2e]
-
 
     def new_frame_seq(self):
         return iter(range(self.t.size))

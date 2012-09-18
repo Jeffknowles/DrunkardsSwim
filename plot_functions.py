@@ -6,32 +6,32 @@ def plot_tank(axes = None):
     if axes == None:
         fig = plt.figure()
         axes = fig.add_subplot(111, projection = '3d')
-        axes.set_xlim(0, 68)
+        axes.set_xlim(0, 68.5)
         axes.set_ylim(0, 15)
         axes.set_zlim(0, 15)
 
     c1 = '.3' 
     c2 = '.6'
     box = {}
-    box['bottom1'] = Line3D([0, 68], [0, 0], [0,0], color = c1, linewidth = 2)
+    box['bottom1'] = Line3D([0, 68.5], [0, 0], [0,0], color = c1, linewidth = 2)
     box['bottom2'] = Line3D([0, 0], [0, 15], [0,0], color = c2, linewidth = 2)
-    box['bottom3'] = Line3D([0, 68], [15, 15], [0,0], color = c2, linewidth = 2)
-    box['bottom4'] = Line3D([68, 68], [0, 15], [0,0], color = c1, linewidth = 2)
-    box['top1'] = Line3D([0, 68], [0, 0], [15, 15], color = c1, linewidth = 2)
-    box['top2'] = Line3D([0, 0], [0, 15], [15, 15], color = c1, linewidth = 2)
-    box['top3'] = Line3D([0, 68], [15, 15], [15, 15], color = c1, linewidth = 2)
-    box['top4'] = Line3D([68, 68], [0, 15], [15, 15], color = c1, linewidth = 2)
+    box['bottom3'] = Line3D([0, 68.5], [15, 15], [0,0], color = c2, linewidth = 2)
+    box['bottom4'] = Line3D([68.5, 68.5], [0, 15], [0,0], color = c1, linewidth = 2)
     box['side1'] = Line3D([0, 0], [0, 0], [0, 15], color = c1, linewidth = 2)
-    box['side2'] = Line3D([68, 68], [0, 0], [0, 15], color = c1, linewidth = 2)
-    box['side3'] = Line3D([68, 68], [15, 15], [0, 15], color = c2, linewidth = 2)
+    box['side2'] = Line3D([68.5, 68.5], [0, 0], [0, 15], color = c1, linewidth = 2)
+    box['side3'] = Line3D([68.5, 68.5], [15, 15], [0, 15], color = c2, linewidth = 2)
     box['side4'] = Line3D([0, 0], [15, 15], [0, 15], color = c2, linewidth = 2)
+    box['top1'] = Line3D([0, 68.5], [0, 0], [15, 15], color = c1, linewidth = 2)
+    box['top2'] = Line3D([0, 0], [0, 15], [15, 15], color = c1, linewidth = 2)
+    box['top3'] = Line3D([0, 68.5], [15, 15], [15, 15], color = c1, linewidth = 2)
+    box['top4'] = Line3D([68.5, 68.5], [0, 15], [15, 15], color = c1, linewidth = 2)
 
     keylist = box.keys()
     keylist.sort()
     for key in keylist:
         axes.add_line(box[key])
 
-    axes.view_init(25, -105)
+    axes.view_init(25, -100)
     axes.set_axis_bgcolor('w')
 
     return axes
@@ -40,7 +40,7 @@ def plot_track3d(track, axes = None):
     if axes == None:
         fig = plt.figure()
         axes = fig.add_subplot(111, projection = '3d')
-        axes.set_xlim(0, 68)
+        axes.set_xlim(0, 68.5)
         axes.set_ylim(0, 15)
         axes.set_zlim(0, 15)
     track = track * 100
@@ -57,7 +57,7 @@ def plot_xdata(data):
     if 'track' in data:
         a[1] = fig.add_subplot(411)    
         plt.plot(data['time'], data['track'][:,0] * 100, color = 'black')
-        a[1].set_ylim(0, 68)
+        a[1].set_ylim(0, 68.5)
         a[1].set_xlabel('Time (s)')
         a[1].set_ylabel('X Position (cm)')
 

@@ -1,4 +1,5 @@
 # plot_functions
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Line3D
 
@@ -52,7 +53,6 @@ def plot_track3d(track, axes = None):
     
 def plot_xdata(data):
     fig = plt.figure()
-
     a = {}
     if 'track' in data:
         a[1] = fig.add_subplot(411)    
@@ -70,7 +70,7 @@ def plot_xdata(data):
 
     if 'flow_rate' in data:
         a[3] = fig.add_subplot(413)    
-        plt.plot(data['time'], data['flow_rate']*100, color = 'black')
+        plt.plot(data['time'], data['flow_rate'] * 100, color = 'black')
         a[3].set_xlabel('Time (s)')
         a[3].set_ylabel('Flow Rate (cm/s)')
 
@@ -83,6 +83,32 @@ def plot_xdata(data):
 
     return a
 
+def plot_kineticdata(data):
+    fig = plt.figure()
+    a = {}
+
+    if 'state' in data:
+        a[0] = fig.add_subplot(411)    
+        plt.plot(data['time'], data['state'], color = 'black')
+        a[0].set_ylim(-.1, 2.1)
+        a[0].set_xlabel('Time (s)')
+        a[0].set_ylabel('State')
+    if 'velocity' in data:
+        a[1] = fig.add_subplot(412)    
+        speed = np.array([np.linalg.norm(vel) for vel in data['velocity']])
+        plt.plot(data['time'], speed * 100, color = 'black')
+        #a[1].set_ylim(0, 68.5)
+        a[1].set_xlabel('Time (s)')
+        a[1].set_ylabel('Speed (cm/s)')
+
+    if 'lateral_line' in data:
+        a[4] = fig.add_subplot(413)    
+        plt.plot(data['time'], data['lateral_line'], color = 'black')
+        a[4].set_ylim(0, 1)
+        a[4].set_xlabel('Time (s)')
+        a[4].set_ylabel('LL Potential')
+
+    return fig
 
 
 

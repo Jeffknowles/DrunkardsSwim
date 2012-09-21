@@ -150,5 +150,5 @@ class SubplotAnimation(animation.TimedAnimation):
             l.set_data([], [])
 
 ani = SubplotAnimation()
-#ani.save('walk.mp4')
-plt.show()
+ani.save('walk.mp4', fps=20, codec='mpeg4', clear_temp=True, frame_prefix='_tmp')
+#plt.show()

@@ -22,26 +22,32 @@ state_data[0] = {'power': 0,                    # states 0 and 1 are the normal 
                  'orientation_type': 'animal',
                  'center_theta': None,
                  'center_phi': None,
+                 'turn_lambda': 3,
+                 'sda_t': 0.1*np.pi,
+                 'sda_p': 0.1*np.pi,
                  }
 state_data[1] = {'power': 8e-5,
                  'orientation_type': 'animal',
                  'center_theta': None,
                  'center_phi': None,
+                 'turn_lambda': 3,
+                 'sda_t': 0.1*np.pi,
+                 'sda_p': 0.1*np.pi,
                  }
 state_data[2] = {'power': 10e-5,                 # state 2 is triggered by the ll event (no input probability from 0,1)
                  'orientation_type': 'absolute',
                  'center_theta': np.pi,
-                 'center_phi': 0,
+                 'center_phi': -np.pi / 2,
+                 'turn_lambda': 3,
+                 'sda_t': 0.01*np.pi,
+                 'sda_p': 0.01*np.pi,
                  }
 
 transition_matrix = np.array([[0.991, 0.009, 0.0],  # define transition probability matrix for transitions among states (p = p / second)
                               [0.025, 0.975, 0.0],
-                              [0.01, 0.0,   0.99]])
+                              [0.009, 0.0,   0.991]])
 
-# Turning Parameters (these could be made per state)
-turn_lambda = 3 # average length of time between turns
-sda_t = 0.1*np.pi # standard deviation of turning angles for normal turning dist
-sda_p = 0.1*np.pi
+
 
 # Tank Boundaries
 bounded = True        ## Turn boundries on or off (True or False)
@@ -55,7 +61,7 @@ gravity = np.array([0, 0, -.05])
 lat_tau = 0.1 # increasing slows spiking (time constant of neuron)
 lat_reset = 0 # reset potential
 lat_thresh = 1 # spike threshold
-sensitivity = 2 # decreasing causes increased spiking
+sensitivity = 1 # decreasing causes increased spiking
 leak = 0.0001
 ###################
 # Model Subfunctions
@@ -176,7 +182,7 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
         if turncount > period:
             turncount = 0 # reset the turn counter
 
-            period=round(np.random.exponential(turn_lambda, 1) / binsize) # Select Interval Before Next Turn (bins)
+            period=round(np.random.exponential(state_data[state]['turn_lambda'], 1) / binsize) # Select Interval Before Next Turn (bins)
             
             # setup turning distribution
             if state_data[state]['orientation_type'] == "animal":
@@ -187,8 +193,8 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
                 center_phi = state_data[state]['center_phi']
 
             # perform turns
-            theta = center_theta + np.random.normal(0,sda_t,1) # add change in anlges from normal distribution
-            phi = center_phi + np.random.normal(0,sda_p,1)
+            theta = center_theta + np.random.normal(0,state_data[state]['sda_t'],1) # add change in anlges from normal distribution
+            phi = center_phi + np.random.normal(0,state_data[state]['sda_p'],1)
 
         # find current at the present position
         if flow_on:
@@ -224,10 +230,10 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
             lat_v += (sensitivity * local_current[0] + leak * (0 - lat_v))*binsize/lat_tau
             Vll[bincount] = lat_v
         if lat_v >= lat_thresh:
+            period = 0
             state = 2 # set the state to the trigger
             lat_v = lat_reset
-            SWIM_LEN = 0.25 + np.random.random(1)*1.75
-            movecount = 0
+
 
         # record data
         flow_rate[bincount] = local_current[0]
@@ -250,8 +256,8 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
 if __name__ == "__main__":
     latline = True
     flow = 'JEB'
-    data = randwalk(300, 0.1, 2, np.array([0.37, 0.075, 0.15]), latline = latline, flow_version = flow)
-
+    data = randwalk(300, 0.1, 0, np.array([0.37, 0.075, 0.15]), latline = latline, flow_version = flow)
+    data = randwalk(300, 0.1, 2, data, latline = latline, flow_version = flow)
     import plot_functions
     axes = plot_functions.plot_tank()
     plot_functions.plot_track3d(data['track'], axes = axes)

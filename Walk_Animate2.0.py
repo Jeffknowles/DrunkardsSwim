@@ -10,28 +10,27 @@ import plot_functions
 
 
 track_data = {}
+FLOW_DYNAMICS = 'JEB'
+
+t_noflow = 10
+t_flow = 100
+binsize = .1
+current = 2
 
 # generate all data w/ lateral line switched off
-LATLINE = True
-FLOW_DYNAMICS = 'JEB'
-data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE, flow_version = FLOW_DYNAMICS)
-data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],latline = LATLINE, flow_version = FLOW_DYNAMICS)
-frogtrack_1 = np.zeros((len(data_nf['track'])*2,3))
-frogtrack_1[0:len(data_nf['track']),:] = data_nf['track']
-frogtrack_1[len(data_nf['track'])-1:-1,:] = data_f['track']
-frogtrack_1 = frogtrack_1*100
+LATLINE = False
+frog1 = wlk.randwalk(t_noflow, binsize, 0, np.array([0.37, 0.075, 0.15]), latline = LATLINE, flow_version = FLOW_DYNAMICS)
+frog1 = wlk.randwalk(t_flow, binsize, current, frog1,latline = LATLINE, flow_version = FLOW_DYNAMICS)
+frog1['track'] = frog1['track']*100
 
 # generate all data w/ lateral line switched on
-LATLINE = False
-data_nf = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE, flow_version = FLOW_DYNAMICS)
-data_f = wlk.randwalk(300,0.1, 0, data_nf['track'][-1],latline = LATLINE, flow_version = FLOW_DYNAMICS)
-frogtrack_2 = np.zeros((len(data_nf['track'])*2,3))
-frogtrack_2[0:len(data_nf['track']), :] = data_nf['track']
-frogtrack_2[len(data_nf['track'])-1:-1, :] = data_f['track']
-frogtrack_2 = frogtrack_2*100
+LATLINE = True
+frog2 = wlk.randwalk(t_noflow, binsize, 0, np.array([0.37, 0.075, 0.15]), latline = LATLINE, flow_version = FLOW_DYNAMICS)
+frog2 = wlk.randwalk(t_flow, binsize, current, frog2,latline = LATLINE, flow_version = FLOW_DYNAMICS)
+frog2['track'] = frog2['track']*100
 
-flow = np.ones(len(frogtrack_2),'int')
-flow[0:len(data_nf['track'])] = flow[0:len(data_nf['track'])]*0
+flow = np.ones(frog1['track'].shape[0],'int') * current
+flow[0: (float(t_noflow)/ binsize)] = 0
 
 speed = np.array(['0 cm/s','10 cm/s'],dtype='str')
 
@@ -43,21 +42,25 @@ class SubplotAnimation(animation.TimedAnimation):
         ax1 = fig.add_subplot(2, 1, 1,projection='3d')
         ax2 = fig.add_subplot(2, 1, 2,projection='3d')
         
-        self.t = np.arange(0,6000)
-        self.x = frogtrack_1[self.t,0]
-        self.y = frogtrack_1[self.t,1]
-        self.z = frogtrack_1[self.t,2]
+        self.t = np.arange(0,len(frog1['track']))
+        self.x = frog1['track'][self.t,0]
+        self.y = frog1['track'][self.t,1]
+        self.z = frog1['track'][self.t,2]
         
-        self.x2 = frogtrack_2[self.t,0]
-        self.y2 = frogtrack_2[self.t,1]
-        self.z2 = frogtrack_2[self.t,2]
-        #self.flow = flow[self.t]
+        self.x2 = frog2['track'][self.t,0]
+        self.y2 = frog2['track'][self.t,1]
+        self.z2 = frog2['track'][self.t,2]
+        self.flow = flow[self.t]
+        self.state1 = frog1['state']
+        self.state2 = frog2['state']
         
         ax1.pbaspect = [1.4, 0.4, 0.4]
         ax2.pbaspect = [1.4, 0.4, 0.4]
 
-        ax1.text2D(0.04, 0.65, '0 cm/s', fontsize=18, transform=ax1.transAxes)
-        ax2.text2D(0.04, 0.65, '0 cm/s', fontsize=18, transform=ax2.transAxes)
+        self.flowtexta1 = ax1.text2D(0.04, 0.65, 'Flow 0 cm/s', fontsize=18, transform=ax1.transAxes)
+        self.flowtexta2 = ax2.text2D(0.04, 0.65, 'Flow 0 cm/s', fontsize=18, transform=ax2.transAxes)
+        self.statetexta1 = ax1.text2D(0.04, 0.85, 'State 0', fontsize=18, transform=ax1.transAxes)
+        self.statetexta2 = ax2.text2D(0.04, 0.85, 'State 0', fontsize=18, transform=ax2.transAxes)
 
         plot_functions.plot_tank(ax1)
         plot_functions.plot_tank(ax2)
@@ -107,7 +110,7 @@ class SubplotAnimation(animation.TimedAnimation):
         ax2.set_yticks([])
         ax2.set_zticks([0, 15])
        
-        animation.TimedAnimation.__init__(self, fig, interval=50, blit=False)
+        animation.TimedAnimation.__init__(self, fig, interval=10, blit=False)
 
     def _draw_frame(self, framedata):
         i = framedata
@@ -128,6 +131,11 @@ class SubplotAnimation(animation.TimedAnimation):
         self.line2.set_3d_properties(self.z2[:i])
         self.line2a.set_3d_properties(self.z2[head_slice])
         self.line2e.set_3d_properties(self.z2[head])
+
+        self.flowtexta1.set_text('flow ' + str(self.flow[head]) + ' cm/s')
+        self.flowtexta2.set_text('flow ' + str(self.flow[head]) + ' cm/s')
+        self.statetexta1.set_text('state ' + str(self.state1[head]))
+        self.statetexta2.set_text('state ' + str(self.state2[head]))
 
         self._drawn_artists = [self.line1, self.line1a, self.line1e,
                                self.line2, self.line2a, self.line2e]

@@ -18,7 +18,7 @@ mass = 0.0004
 # Behavioral state parameters
 nstates = 3
 state_data = [{}]*nstates
-state_data[0] = {'power': 0,
+state_data[0] = {'power': 0,                    # states 0 and 1 are the normal behavior
                  'orientation_type': 'animal',
                  'center_theta': None,
                  'center_phi': None,
@@ -28,7 +28,7 @@ state_data[1] = {'power': 8e-5,
                  'center_theta': None,
                  'center_phi': None,
                  }
-state_data[2] = {'power': 10e-5,
+state_data[2] = {'power': 10e-5,                 # state 2 is triggered by the ll event (no input probability from 0,1)
                  'orientation_type': 'absolute',
                  'center_theta': np.pi,
                  'center_phi': 0,
@@ -55,8 +55,8 @@ gravity = np.array([0, 0, -.05])
 lat_tau = 0.1 # increasing slows spiking (time constant of neuron)
 lat_reset = 0 # reset potential
 lat_thresh = 1 # spike threshold
-k_ = 0.0001 # decreasing causes increased spiking
-
+sensitivity = 2 # decreasing causes increased spiking
+leak = 0.0001
 ###################
 # Model Subfunctions
 ###################
@@ -76,6 +76,7 @@ current_data['jeb'] = np.array([[ 0.05,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.05],
                               [ 0.1 ,  0.4 ,  1.0 ,  0.8 ,  0.4 ,  0.1 ],
                               [ 0.1 ,  0.2 ,  0.2 ,  0.2 ,  0.2 ,  0.1 ],
                               [ 0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
+
 def return_local_current(position, flow_version = 'new'):
     if flow_version.lower() in current_data:
         idx_y = np.argmin(abs(current_data['y'] - position[1]))
@@ -113,7 +114,29 @@ def calculate_drag(s, form = 'linear'):
 ###################
 # Model Main Function
 ###################
-def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_version = "JEB"):
+def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_version = "JEB"):
+
+    # Preallocate recording variables 
+    if isinstance(input_data, np.ndarray):     #regular case of initial position
+        time = np.arange(0,round(simlength/binsize)) * binsize
+        velocity = np.zeros((round(simlength/binsize),ndim))
+        position = np.zeros((round(simlength/binsize),ndim))
+        orientation = np.zeros((round(simlength/binsize,1)))
+        flow_rate = np.zeros((round(simlength/binsize,1)))
+        state_record = np.zeros((round(simlength/binsize,1)))
+        Vll = np.zeros((round(simlength/binsize,1)))
+        position[0,:] = input_data
+        bincount = 0
+    elif isinstance(input_data, dict):       # continued run on data
+        time = np.append(input_data['time'], input_data['time'][-1] + np.arange(0,round(simlength/binsize)) * binsize)
+        velocity = np.append(input_data['velocity'], np.zeros((round(simlength/binsize),ndim)), axis = 0)
+        position = np.append(input_data['track'], np.zeros((round(simlength/binsize),ndim)), axis = 0)
+        orientation = np.append(input_data['orientation'], np.zeros((round(simlength/binsize,1))), axis = 0)
+        flow_rate = np.append(input_data['flow_rate'], np.zeros((round(simlength/binsize,1))), axis = 0)
+        state_record = np.append(input_data['state'], np.zeros((round(simlength/binsize,1))), axis = 0)
+        Vll = np.append(input_data['lateral_line'], np.zeros((round(simlength/binsize,1))), axis = 0)
+        bincount = input_data['time'].shape[0] - 1
+
     # normalize the transition matrix with the binsize
     TRANSMAT = transition_matrix #* binsize
 
@@ -136,19 +159,8 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
     movecount = 0 # starting value
     lat_v = 0.0 # starting value (resting potential)
 
-    # Preallocate recording variables
-    time = np.arange(0,round(simlength/binsize)) * binsize
-    velocity = np.zeros((round(simlength/binsize),ndim))
-    position = np.zeros((round(simlength/binsize),ndim))
-    orientation = np.zeros((round(simlength/binsize,1)))
-    flow_rate = np.zeros((round(simlength/binsize,1)))
-    state_record = np.zeros((round(simlength/binsize,1)))
-    Vll = np.zeros((round(simlength/binsize,1)))
-    position[0,:] = Iposition
-
     # setup counters
     turncount = 0
-    bincount = 0
 
     # MAIN LOOP 
     for ktime in range(0,int(simlength/binsize)-1): #(binsize,simlength,binsize):
@@ -209,7 +221,7 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
 
         # run lateral line model
         if latline:
-            lat_v += (local_current[0] + k_*(lat_v))*binsize/lat_tau
+            lat_v += (sensitivity * local_current[0] + leak * (0 - lat_v))*binsize/lat_tau
             Vll[bincount] = lat_v
         if lat_v >= lat_thresh:
             state = 2 # set the state to the trigger
@@ -238,7 +250,7 @@ def randwalk(simlength, binsize, flow_speed, Iposition, latline = True, flow_ver
 if __name__ == "__main__":
     latline = True
     flow = 'JEB'
-    data = randwalk(300, 0.1, 1, np.array([0.37, 0.075, 0.15]), latline = latline, flow_version = flow)
+    data = randwalk(300, 0.1, 2, np.array([0.37, 0.075, 0.15]), latline = latline, flow_version = flow)
 
     import plot_functions
     axes = plot_functions.plot_tank()

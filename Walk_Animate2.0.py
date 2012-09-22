@@ -3,41 +3,51 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d
 from mpl_toolkits.mplot3d.art3d import Line3D
 import matplotlib.animation as animation
-import matplotlib.patches as patches
-
 import walkfunction as wlk
 import plot_functions
 
 
-track_data = {}
 FLOW_DYNAMICS = 'JEB'
-REAL_DATA = 1
+
+# Decide whether to use real data
+REAL_DATA = 1 # 1 = Yes
 
 t_noflow = 300 # in sec
 t_flow = 300 # in sec
-binsize = .1 # in sec
-current = 8
+
+binsize = 1.0/30.0 # in sec (1sec/30FPS if using real data)
+DOWNSAMPLE_RATE = 4 
+
+current = 8 # in cm/s.
 
 if REAL_DATA == 1:
     # Import No Flow data:
     frog1_NF = np.genfromtxt('/Users/brianschmidt/Dropbox/TadpoleStuff/Tracked_data_CSV/NPF5_2_NF_lessFilt.csv',delimiter=',')
-    # downsample
+    
+    # filter zeros downsample
     index = frog1_NF[:,0]!=0
     frog1_NF = frog1_NF[index]
-    frog1_NF = frog1_NF[0::3]
+    frog1_NF = frog1_NF[0::DOWNSAMPLE_RATE]
+
     # reset the simulation length to reflect data
-    t_noflow = len(frog1_NF)*binsize
+    t_noflow = len(frog1_NF)*binsize*DOWNSAMPLE_RATE
+
     # Import Flow data:
     frog1_F = np.genfromtxt('/Users/brianschmidt/Dropbox/TadpoleStuff/Tracked_data_CSV/NPF5_2_F_lessFilt.csv',delimiter=',')
+
+    # filter zeros and downsample
     index = frog1_F[:,0]!=0
     frog1_F = frog1_F[index]
-    frog1_F = frog1_F[0::3]
+    frog1_F = frog1_F[0::DOWNSAMPLE_RATE]
+
     # reset the simulation length to reflect data
-    t_flow = len(frog1_F)*binsize
+    t_flow = len(frog1_F)*binsize*DOWNSAMPLE_RATE
+
     # Append data into one structure:
     frog1 = np.append(frog1_NF,frog1_F,axis=0)
     frog1 = {'track': frog1,
-             'state': np.zeros((len(frog1)))}
+             'state': None}
+    
     FROG1NAME = 'Observed Data'
 else:   
     # generate all data w/ lateral line switched off
@@ -46,16 +56,22 @@ else:
     frog1 = wlk.randwalk(t_flow, binsize, current, frog1,latline = LATLINE, flow_version = FLOW_DYNAMICS)
     frog1['track'] = frog1['track']*100
     FROG1NAME = 'NO Lateral Line Model'
+    # downsample
+    for data in frog1:
+        frog1[data] = frog1[data][0::DOWNSAMPLE_RATE]
     
-# generate all data w/ lateral line switched on
+# generate all data w/ lateral line switched on - First compute at high resolution before downsampling
 LATLINE = True
 frog2 = wlk.randwalk(t_noflow, binsize, 0, np.array([0.34, 0.075, 0.15]), latline = LATLINE, flow_version = FLOW_DYNAMICS)
 frog2 = wlk.randwalk(t_flow, binsize, current, frog2,latline = LATLINE, flow_version = FLOW_DYNAMICS)
 frog2['track'] = frog2['track']*100
-#frog2['track'] = frog2['track'][0:len(frog1['track'])]
+
+# downsample
+for data in frog2:
+    frog2[data] = frog2[data][0::DOWNSAMPLE_RATE]
 
 flow = np.ones(frog1['track'].shape[0],'int') * current
-flow[0: (float(t_noflow)/ binsize)] = 0
+flow[0: (float(t_noflow)/ binsize / DOWNSAMPLE_RATE)] = 0
 
 class SubplotAnimation(animation.TimedAnimation):
     def __init__(self):
@@ -76,16 +92,19 @@ class SubplotAnimation(animation.TimedAnimation):
         self.flow = flow[self.t]
         self.state1 = frog1['state']
         self.state2 = frog2['state']
-        
-        ax1.pbaspect = [1.4, 0.4, 0.4]
-        ax2.pbaspect = [1.4, 0.4, 0.4]
 
+        
         self.flowtexta1 = ax1.text2D(0.001, 0.65, 'Flow 0 cm/s', fontsize=18, transform=ax1.transAxes)
         self.flowtexta2 = ax2.text2D(0.001, 0.65, 'Flow 0 cm/s', fontsize=18, transform=ax2.transAxes)
         if REAL_DATA == 0:
-            self.statetexta1 = ax1.text2D(0.001, 0.85, 'State 0', fontsize=18, transform=ax1.transAxes)
-        self.statetexta2 = ax2.text2D(0.001, 0.85, 'State 0', fontsize=18, transform=ax2.transAxes)
-        self.framerate = ax1.text2D(0.90, 0.85, '3x speed', fontsize = 18, transform=ax1.transAxes)
+            self.statetexta1 = ax1.text2D(0.001, 0.50, 'State 0', fontsize=18, transform=ax1.transAxes)
+        self.statetexta2 = ax2.text2D(0.001, 0.50, 'State 0', fontsize=18, transform=ax2.transAxes)
+        self.framerate = ax1.text2D(0.90, 0.85, str(DOWNSAMPLE_RATE) + 'x speed', fontsize = 18, transform=ax1.transAxes)
+        self.info1 = ax2.text2D(0.90,0.95,'State key',fontsize = 18,transform=ax2.transAxes)
+        self.info2 = ax2.text2D(0.90,0.90,'------------',fontsize = 18, transform=ax2.transAxes)
+        self.info2 = ax2.text2D(0.90,0.75,'0: rest',fontsize = 18, transform=ax2.transAxes)
+        self.info3 = ax2.text2D(0.90,0.60,'1: swim ', fontsize = 18, transform=ax2.transAxes)
+        self.info4 = ax2.text2D(0.90,0.45,'2: lat. line.', fontsize = 18, transform=ax2.transAxes)
 
         plot_functions.plot_tank(ax1)
         plot_functions.plot_tank(ax2)
@@ -136,7 +155,7 @@ class SubplotAnimation(animation.TimedAnimation):
         ax2.set_zticks([0, 15])
 
         plt.rc('xtick', labelsize=20)
-        
+
         animation.TimedAnimation.__init__(self, fig, interval=10, blit=False)
 
     def _draw_frame(self, framedata):

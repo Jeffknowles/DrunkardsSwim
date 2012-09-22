@@ -57,7 +57,7 @@ frog2['track'] = frog2['track'][0:len(frog1['track'])]
 flow = np.ones(frog1['track'].shape[0],'int') * current
 flow[0: (float(t_noflow)/ binsize)] = 0
 
-speed = np.array(['0 cm/s','10 cm/s'],dtype='str')
+#speed = np.array(['0 cm/s','10 cm/s'],dtype='str')
 
 class SubplotAnimation(animation.TimedAnimation):
     def __init__(self):
@@ -87,7 +87,7 @@ class SubplotAnimation(animation.TimedAnimation):
         if REAL_DATA == 0:
             self.statetexta1 = ax1.text2D(0.001, 0.85, 'State 0', fontsize=18, transform=ax1.transAxes)
         self.statetexta2 = ax2.text2D(0.001, 0.85, 'State 0', fontsize=18, transform=ax2.transAxes)
-        self.framerate = ax1.text2d(0.90, 0.85, '3x', fontsize = 18, transform=ax1.transAxes)
+        self.framerate = ax1.text2D(0.90, 0.85, '3x speed', fontsize = 18, transform=ax1.transAxes)
 
         plot_functions.plot_tank(ax1)
         plot_functions.plot_tank(ax2)
@@ -137,7 +137,7 @@ class SubplotAnimation(animation.TimedAnimation):
         ax2.set_yticks([])
         ax2.set_zticks([0, 15])
 
-        plt.rc('xtick', labelsize=18)
+        plt.rc('xtick', labelsize=20)
         
         animation.TimedAnimation.__init__(self, fig, interval=10, blit=False)
 

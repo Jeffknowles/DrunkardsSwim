@@ -13,9 +13,9 @@ track_data = {}
 FLOW_DYNAMICS = 'JEB'
 REAL_DATA = 1
 
-t_noflow = 300
-t_flow = 300
-binsize = .1
+t_noflow = 300 # in sec
+t_flow = 300 # in sec
+binsize = .1 # in sec
 current = 8
 
 if REAL_DATA == 1:
@@ -26,14 +26,14 @@ if REAL_DATA == 1:
     frog1_NF = frog1_NF[index]
     frog1_NF = frog1_NF[0::3]
     # reset the simulation length to reflect data
-    t_noflow = len(frog1_NF)
+    t_noflow = len(frog1_NF)*binsize
     # Import Flow data:
     frog1_F = np.genfromtxt('/Users/brianschmidt/Dropbox/TadpoleStuff/Tracked_data_CSV/NPF5_2_F_lessFilt.csv',delimiter=',')
     index = frog1_F[:,0]!=0
     frog1_F = frog1_F[index]
     frog1_F = frog1_F[0::3]
     # reset the simulation length to reflect data
-    t_flow = len(frog1_F)
+    t_flow = len(frog1_F)*binsize
     # Append data into one structure:
     frog1 = np.append(frog1_NF,frog1_F,axis=0)
     frog1 = {'track': frog1,
@@ -52,12 +52,10 @@ LATLINE = True
 frog2 = wlk.randwalk(t_noflow, binsize, 0, np.array([0.34, 0.075, 0.15]), latline = LATLINE, flow_version = FLOW_DYNAMICS)
 frog2 = wlk.randwalk(t_flow, binsize, current, frog2,latline = LATLINE, flow_version = FLOW_DYNAMICS)
 frog2['track'] = frog2['track']*100
-frog2['track'] = frog2['track'][0:len(frog1['track'])]
+#frog2['track'] = frog2['track'][0:len(frog1['track'])]
 
 flow = np.ones(frog1['track'].shape[0],'int') * current
 flow[0: (float(t_noflow)/ binsize)] = 0
-
-#speed = np.array(['0 cm/s','10 cm/s'],dtype='str')
 
 class SubplotAnimation(animation.TimedAnimation):
     def __init__(self):
@@ -181,5 +179,5 @@ class SubplotAnimation(animation.TimedAnimation):
             l.set_data([], [])
 
 ani = SubplotAnimation()
-#ani.save('walk.mp4')
+ani.save('walk.mp4')
 plt.show()

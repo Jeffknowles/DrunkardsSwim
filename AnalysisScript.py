@@ -21,16 +21,13 @@ BayesHypothesisTest = 'On'
 if FLOW == 'Off':
     
     DATA = np.genfromtxt('/Users/brianschmidt/GDrive/Tadpole/Combined_Data/JEBdataNoFlowCombined.csv', delimiter=',')
-    MODEL1 = np.genfromtxt('/Users/brianschmidt/GDrive/Tadpole/DrunkardsSwim/New_Flow/Model_NEW10cm_LL_NoFlow.csv',
-                           delimiter=',')
-    MODEL2 = np.genfromtxt('/Users/brianschmidt/GDrive/Tadpole/DrunkardsSwim/JEB_Flow/Model_JEB10cm_LLNoFlow.csv',
-                           delimiter=',')
+    MODEL1 = np.load('/Users/brianschmidt/GDrive/Tadpole/DrunkardsSwim/JEB_10cm_llOFF_NoFlow.npz')
+    MODEL2 = np.load('/Users/brianschmidt/GDrive/Tadpole/DrunkardsSwim/JEB_10cm_llON_NoFlow.npz')
 
 if FLOW == 'On':
     DATA = np.genfromtxt('/Users/brianschmidt/GDrive/Tadpole/Combined_Data/JEBFlowCombined.csv', delimiter=',')
-    MODEL1 = np.genfromtxt('/Users/brianschmidt/GDrive/Tadpole/DrunkardsSwim/New_Flow/Model_NEW10cm_LL_Flow.csv',
-                      delimiter=',')
-    MODEL2 = np.genfromtxt('/Users/brianschmidt/GDrive/Tadpole/Combined_Data/JEBdataNoFlowCombined.csv', delimiter=',')
+    MODEL1 = np.load('/Users/brianschmidt/GDrive/Tadpole/DrunkardsSwim/10cm_llOFF_Flow.npy')
+    MODEL2 = np.load('/Users/brianschmidt/GDrive/Tadpole/DrunkardsSwim/10cm_llON_Flow.npy')
 
 
 ## Orientation.
@@ -38,8 +35,8 @@ if FLOW == 'On':
 if ORIENT_ANALYSIS == 'On':
     
     Data_Orient,bins = af.OrientationHist(DATA)
-    Model1_Orient,bins = af.OrientationHist(MODEL1)
-    Model2_Orient,bins = af.OrientationHist(MODEL2)
+    Model1_Orient,bins = af.OrientationHist(MODEL1['orientation'],Dim=0)
+    Model2_Orient,bins = af.OrientationHist(MODEL2['orientation'],Dim=0)
 
     af.OrientationPlot(Data_Orient,bins)
     af.OrientationPlot(Model1_Orient,bins)
@@ -47,9 +44,13 @@ if ORIENT_ANALYSIS == 'On':
 
 ## Standardize XYZ Data.
 
-Data_Standard = af.StandardizeData(DATA,68.0, 15.0, Loc=np.array([0,1,2]))
-Model1_Standard = af.StandardizeData(MODEL1, 68.0, 15.0)
-Model2_Standard = af.StandardizeData(MODEL2, 68.0, 15.0)
+# infer binsize (np.savez will apparently only save 6 variables so currently using this workaround).
+MODEL1.binsize = MODEL1['time'][1] - MODEL1['time'][0]
+MODEL2.binsize = MODEL2['time'][1] - MODEL2['time'][0]
+
+Data_Standard = af.StandardizeData(DATA,68.0, 15.0, Loc=np.array([0,1,2])) # assumes data 30 sec. time resolution
+Model1_Standard = af.StandardizeData(MODEL1['track'][0::30/MODEL1.binsize[0]]*100, 68.5, 15.0) #downsample, convert to cm
+Model2_Standard = af.StandardizeData(MODEL2['track'][0::30/MODEL2.binsize[0]]*100, 68.5, 15.0) #downsample, convert to cm
 
 ## Descriptive statistics: ProportionDown()
 

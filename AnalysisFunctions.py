@@ -115,7 +115,7 @@ def OrientationHist(Data,Dim = 3,Bin_Resolution = 15):
     Bin_Resolution: size of the bins used in histogram. Default = 15 
     
     """
-    Data = Data[:,3]
+    Data = Data[:,Dim]
 
     BINS = np.linspace(0,360,360/Bin_Resolution) ## 15degree bins
 

@@ -3,81 +3,72 @@ import numpy as np
 import scipy as sp
 import walkfunction as wlk
 
-############################
-##### USER INPUT BELOW #####
-############################
 
-NUMFROG = 5 # Number of tadpoles you would like to simulate.
+##### Options #####
+###################
+
+numfrog = 2 # Number of tadpoles you would like to simulate.
 TIME = 300 # This is the time of the simulation in seconds for each flow condition.
-FLOW_DYNAMICS = 'NEW' ## 'JEB' or 'NEW'
+FLOW_DYNAMICS = 'jeb' ## 'jeb' or 'new'
+binsize = 0.1
 
-NO_FLOW = np.array(['Model_NEW10cm_NoLL_NoFlow.csv', 'Model_NEW10cm_LL_NoFlow.csv',
-                    'Model_NEW8cm_NoLL_NoFlow.csv', 'Model_NEW8cm_LL_NoFlow.csv',
-                    'Model_NEW6cm_NoLL_NoFlow.csv', 'Model_NEW6cm_LL_NoFlow.csv',
-                    'Model_NEW4cm_NoLL_NoFlow.csv', 'Model_NEW4cm_LL_NoFlow.csv',
-                    'Model_NEW2cm_NoLL_NoFlow.csv', 'Model_NEW2cm_LL_NoFlow.csv'])
+# set the flow and lat line conditions
+flowspeed = np.array([10, 10,8, 8, 6, 6])
+latlin =    np.array([0 , 1 ,0, 1, 0, 1])
 
-FLOW = np.array(['Model_NEW10cm_NoLL_Flow.csv', 'Model_NEW10cm_LL_Flow.csv',
-                 'Model_NEW8cm_NoLL_Flow.csv', 'Model_NEW8cm_LL_Flow.csv',
-                 'Model_NEW6cm_NoLL_Flow.csv', 'Model_NEW6cm_LL_Flow.csv',
-                 'Model_NEW4cm_NoLL_Flow.csv', 'Model_NEW4cm_LL_Flow.csv',
-                 'Model_NEW2cm_NoLL_Flow.csv', 'Model_NEW2cm_LL_Flow.csv'])
+#### end options #####
+######################
 
-flowspeed = np.array([10,10,8,8,6,6,4,4,2,2])
-latlin =    np.array([0,1,0,1,0,1,0,1,0,1])
-
+lat = ['llOFF', 'llON'] # this is just for naming files.
+froglen = TIME/binsize
 
 for i in range(0,len(flowspeed)):
-    NO_FLOW_CSV_FILE_NAME = NO_FLOW[i]
-    FLOW_CSV_FILE_NAME = FLOW[i]
+    
+    # set up run conditions and allocate memory.
     LATLINE = latlin[i] # 0=off, 1=on
     FLOWSPEED = flowspeed[i] ## in cm/s, has to be 0, 6, 8 or 10cm/s
 
+    frogData_NF = {'time': np.zeros((TIME/binsize*numfrog)),
+                'track': np.zeros((TIME/binsize*numfrog,3)),
+                'velocity':np.zeros((TIME/binsize*numfrog,3)),
+                'orientation':np.zeros((TIME/binsize*numfrog)),
+                'lateral_line':np.zeros((TIME/binsize*numfrog)),
+                'state':np.zeros((TIME/binsize*numfrog))
+                }
 
-##############################
-####### END USER INPUT #######
-##############################
-
-# This begins the simulation of 0cm/s flow conditions.
-    FROGDATA = np.zeros((NUMFROG*10,4))
-    FINALPOSITION = np.zeros((NUMFROG,4))
-
-    for j in range(0,NUMFROG):
-        #(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION)  - Version refers to flow dynamics.
-        run_data = wlk.randwalk(300,0.1, 0, np.array([0.37, 0.075, 0.15]),latline = LATLINE,flow_version = FLOW_DYNAMICS)
-
-        frogData = np.zeros((10,4))
-    # Here we are extracting only the position at 30 second intervals.
-        for i in range(0,10):
-            Data = run_data['track'][(i*300)+299,:]
-            Orient = run_data['orientation'][(i*300)+299]
-            frogData[i,:] = np.append(Data,Orient)
+    frogData_F = {'time': np.zeros((TIME/binsize*numfrog)),
+                'track': np.zeros((TIME/binsize*numfrog,3)),
+                'velocity':np.zeros((TIME/binsize*numfrog,3)),
+                'orientation':np.zeros((TIME/binsize*numfrog)),
+                'lateral_line':np.zeros((TIME/binsize*numfrog)),
+                'state':np.zeros((TIME/binsize*numfrog))
+                }
+    
+    for j in range(0,numfrog):
         
-        FINALPOSITION[j,:] = frogData[9,:]
-        FROGDATA[(j+1)*10-10:(j+1)*10,:] = frogData
-    
-    FROGDATA[:,0:3] = FROGDATA[:,0:3]*100 #convert meters into cm
+        #(SIMLENGTH,BINSIZE,FLOW_SPEED,IPOS,LATLINE,VERSION)  - Version refers to flow dynamics.
+        run_data_NF = wlk.randwalk(TIME,binsize,0, np.array([0.37, 0.075, 0.15]),latline = LATLINE,flow_version = FLOW_DYNAMICS)
 
-    np.savetxt(NO_FLOW_CSV_FILE_NAME, FROGDATA, delimiter=',')
+        # there is likely a more elegant way to pack these data up.
+        frogData_NF['time'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['time']
+        frogData_NF['track'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['track']
+        frogData_NF['velocity'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['velocity']
+        frogData_NF['orientation'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['orientation']
+        frogData_NF['lateral_line'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['lateral_line']
+        frogData_NF['state'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['state']
 
-## This begins the FLOW simulation: 
-    FROGDATA = np.zeros((NUMFROG*10,4))
 
-    for j in range(0,NUMFROG):
-        ipos = FINALPOSITION[j,:] # this indicates initial position which is the last recorded
-    #position for each tadpole under 0cm/s, thus creating a continuous
-    #trial, just like the pulsed flow experiments we run.
-        run_data = wlk.randwalk(300,0.1, FLOWSPEED, ipos[0:3],latline = LATLINE, flow_version = FLOW_DYNAMICS)
-        frogData = np.zeros((10,4))
+        run_data_F = wlk.randwalk(TIME,binsize, FLOWSPEED, run_data_NF,latline = LATLINE,flow_version = FLOW_DYNAMICS)
 
-        for i in range(0,10):
-            Data = run_data['track'][(i*300)+299,:]
-            Orient = run_data['orientation'][(i*300)+299]
-            frogData[i,:] = np.append(Data,Orient)
-    
-        FROGDATA[(j+1)*10-10:(j+1)*10,:] = frogData
+        
+        frogData_F['time'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['time']
+        frogData_F['track'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['track']
+        frogData_F['velocity'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['velocity']
+        frogData_F['orientation'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['orientation']
+        frogData_F['lateral_line'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['lateral_line']
+        frogData_F['state'][(j+1)*froglen-froglen:(j+1)*froglen] = run_data_NF['state']
 
-    FROGDATA[:,0:3] = FROGDATA[:,0:3]*100
-
-    np.savetxt(FLOW_CSV_FILE_NAME, FROGDATA, delimiter=',')
+    # saves files as .npz files.  Use 'load()' to load files for analysis.
+    np.save(str(FLOWSPEED) + 'cm_' + str(lat[LATLINE]) + '_NoFlow', frogData_NF)
+    np.save(str(FLOWSPEED) + 'cm_' + str(lat[LATLINE]) + '_Flow', frogData_F)
 

@@ -158,6 +158,32 @@ def plot_flow(current,axes = None):
     
     return axes
 
+
+def plot_flow_field(flow_field = 'jeb',axes = None):
+    
+    if flow_field.lower() == 'new':
+        current_data = np.array([[ 0.08,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.15],
+                              [ 0.15 ,  0.3 ,  0.3 ,  0.5 ,  0.3 ,  0.15 ],
+                              [ 0.15 ,  0.5 ,  0.4 ,  0.4 ,  0.5 ,  0.15 ],
+                              [ 0.15 ,  1.0 ,  0.6 ,  0.6 ,  1.0 ,  0.15 ],
+                              [ 0.15 ,  0.5 ,  1.0 ,  1.0 ,  0.5 ,  0.15 ],
+                              [ 0.10 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.10 ]])
+    if flow_field.lower() == 'jeb':
+        current_data = np.array([[ 0.05,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.05],
+                              [ 0.1 ,  0.4 ,  0.4 ,  0.4 ,  0.4 ,  0.1 ],
+                              [ 0.1 ,  0.4 ,  0.5 ,  0.5 ,  0.4 ,  0.1 ],
+                              [ 0.1 ,  0.4 ,  1.0 ,  0.8 ,  0.4 ,  0.1 ],
+                              [ 0.1 ,  0.2 ,  0.2 ,  0.2 ,  0.2 ,  0.1 ],
+                              [ 0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
+    if axes == None:
+        fig = plt.figure()
+        axes = fig.add_subplot(111)
+        
+    axes.imshow(current_data, interpolation='None', origin='lower')
+    
+
+    return axes
+
 def plot_leak2D(data, axes = None):
     if axes == None:
         fig = plt.figure()
@@ -188,30 +214,7 @@ def plot_current2D(data, current, axes = None):
         plt.axis('off')
     return fig
     
-def plot_flow_field3D(flow_field = 'jeb',axes = None):
-    
-    if flow_field.lower() == 'new':
-        current_data = np.array([[ 0.08,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.15],
-                              [ 0.15 ,  0.3 ,  0.3 ,  0.5 ,  0.3 ,  0.15 ],
-                              [ 0.15 ,  0.5 ,  0.4 ,  0.4 ,  0.5 ,  0.15 ],
-                              [ 0.15 ,  1.0 ,  0.6 ,  0.6 ,  1.0 ,  0.15 ],
-                              [ 0.15 ,  0.5 ,  1.0 ,  1.0 ,  0.5 ,  0.15 ],
-                              [ 0.10 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.10 ]])
-    if flow_field.lower() == 'jeb':
-        current_data = np.array([[ 0.05,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.05],
-                              [ 0.1 ,  0.4 ,  0.4 ,  0.4 ,  0.4 ,  0.1 ],
-                              [ 0.1 ,  0.4 ,  0.5 ,  0.5 ,  0.4 ,  0.1 ],
-                              [ 0.1 ,  0.4 ,  1.0 ,  0.8 ,  0.4 ,  0.1 ],
-                              [ 0.1 ,  0.2 ,  0.2 ,  0.2 ,  0.2 ,  0.1 ],
-                              [ 0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
-    if axes == None:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        
-    ax.imshow(current_data, interpolation='None', origin='lower')
-    plt.xticks(np.arange(0,6,1),('left','','','','','right'), fontsize=20)
-    plt.yticks(np.arange(0,6,1),('bottom','','','','','surface'), fontsize=20)
-    return fig
+
 
 if __name__ == "__main__":
     plot_tank()

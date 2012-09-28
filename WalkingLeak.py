@@ -37,6 +37,13 @@ for data in frog1:
 flow = np.ones(frog1['track'].shape[0],'int') * current
 flow[0: (float(t_noflow)/ binsize / DOWNSAMPLE_RATE)] = 0
 
+flow_field = []
+for a in flow:
+    if a == 0:
+        flow_field = np.append(flow_field,None)
+    if a > 0:
+        flow_field = np.append(flow_field,'jeb')
+    
 class SubplotAnimation(animation.TimedAnimation):
     def __init__(self):
         fig = plt.figure(facecolor = 'w', figsize = [12, 6])
@@ -47,8 +54,6 @@ class SubplotAnimation(animation.TimedAnimation):
         ax3 = plt.subplot2grid((3,3), (2, 0), colspan=2)
         ax4 = plt.subplot2grid((3,3), (1, 2), rowspan=2)
 
-
-        
         self.t = np.arange(0,len(frog1['track']))
         self.x = frog1['track'][self.t,0]
         self.y = frog1['track'][self.t,1]
@@ -57,7 +62,6 @@ class SubplotAnimation(animation.TimedAnimation):
         self.x2 = frog1['time'][self.t]
         self.y2 = frog1['flow_rate'][self.t]
         self.y3 = frog1['lateral_line'][self.t]
-       
 
         ax2.text(0.01, 0.8, str(current) + ' cm/s', fontsize=16, transform=ax2.transAxes)
         ax2.text(0.01, 0.05, '0 cm/s', fontsize=16, transform=ax2.transAxes)
@@ -68,9 +72,9 @@ class SubplotAnimation(animation.TimedAnimation):
         plot_functions.plot_tank(ax1)
         plot_functions.plot_flow(current,ax2)
         plot_functions.plot_leak(ax3)
-        plot_functions.plot_flow_field('jeb',axes = ax4)
 
-        
+        plot_functions.plot_flow_field('none',ax4)
+            
         self.line1 = Line3D([], [], [], color='black')
         self.line1a = Line3D([], [], [], color='red', linewidth=2)
         self.line1e = Line3D([], [], [], color='red', marker='o', markeredgecolor='r')
@@ -94,8 +98,7 @@ class SubplotAnimation(animation.TimedAnimation):
         ax3.add_line(self.line3e)
 
         ax4.add_line(self.line4)
-        #ax4.add_line(self.line4e)
-        
+
         ax1.set_xlim(0, 68)
         ax1.set_ylim(0, 15)
         ax1.set_zlim(0, 15)
@@ -129,7 +132,8 @@ class SubplotAnimation(animation.TimedAnimation):
         plt.rc('xtick', labelsize=16)
         #plt.rc('title', labelsize=18)
         plt.tight_layout()
-        
+
+        self.axis4 = ax4
         animation.TimedAnimation.__init__(self, fig, interval=10, blit=False)
 
     def _draw_frame(self, framedata):
@@ -152,13 +156,16 @@ class SubplotAnimation(animation.TimedAnimation):
         self.line3e.set_data(self.x2[head], self.y3[head])
         
         self.line4.set_data(self.y[i]/15.0*5.0, self.z[i]/15.0*5.0)
-        #self.line4.set_data(self.y[he
         
-
         self._drawn_artists = [self.line1, self.line1a, self.line1e,
                                self.line2,self.line2e, self.line3,
                                self.line3e,self.line4]
 
+        if flow_field[i] > 0:
+            plot_functions.plot_flow_field('jeb',self.axis4)
+        else :
+            plot_functions.plot_flow_field('none',self.axis4)
+            
     def new_frame_seq(self):
         return iter(range(self.t.size))
 
@@ -170,5 +177,5 @@ class SubplotAnimation(animation.TimedAnimation):
             l.set_data([], [])
 
 ani = SubplotAnimation()
-ani.save('walk.mp4', fps=20, codec='mpeg4', clear_temp=True, frame_prefix='_tmp')
+#ani.save('walk.mp4', fps=20, codec='mpeg4', clear_temp=True, frame_prefix='_tmp')
 plt.show()

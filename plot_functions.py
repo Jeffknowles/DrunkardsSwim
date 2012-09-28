@@ -175,6 +175,9 @@ def plot_flow_field(flow_field = 'jeb',axes = None):
                               [ 0.1 ,  0.4 ,  1.0 ,  0.8 ,  0.4 ,  0.1 ],
                               [ 0.1 ,  0.2 ,  0.2 ,  0.2 ,  0.2 ,  0.1 ],
                               [ 0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
+    if flow_field.lower() == 'none':
+        current_data = np.zeros((6,6))
+        
     if axes == None:
         fig = plt.figure()
         axes = fig.add_subplot(111)

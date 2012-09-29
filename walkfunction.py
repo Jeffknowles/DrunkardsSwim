@@ -125,7 +125,7 @@ def calculate_friction(position, velocity, F):
         if np.linalg.norm(velocity) == 0:  # static friction if speed = 0
             Ffriction = transform_1(F, contact)  # this pulls the force applied paralell to each surface
             #if np.linalg.norm(Ffriction) > transform_2(F, contact) * static_friction_u
-            Ffriction = np.min(np.array([Ffriction, transform_2(F, contact) * static_friction_u]), axis = 0) # this uses normal_force * static_friction_u to calculate the maximum frictional force 
+            #Ffriction = np.min(np.array([Ffriction, calculate_normal_forace(F, contact) * static_friction_u]), axis = 0) # this uses normal_force * static_friction_u to calculate the maximum frictional force 
         else:   # kinetic friction
             Ffriction = np.array([0, 0, 0])
             #Ffriction = transform_2(F, contact) * kinetic_friction_u # this uses normal_force * kinetic_friction to find the kinetic firctional force
@@ -144,11 +144,10 @@ def transform_1(F, contact): # this transforms F to be mulitplied by contact and
     Fnegative = -1 * F * paralell_contact
     return Fnegative
 
-def transform_2(F, contact): # this transforms F to Fnormal in each dimension. 
-    A = [[0, 1, 1],
-         [1, 0, 1],
-         [1, 1, 0]]
-    Fnormal = np.dot(A, -1 * F * contact)
+def calculate_normal_forace(F, contact): # this transforms F to Fnormal in each dimension. 
+    top_normal = (contact == 1) * (F > 0) * F
+    bottom_normal = (contact == -1) * (F < 0) * F
+    Fnormal = top_normal + bottom_normal 
     import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
     return Fnormal
 ###################

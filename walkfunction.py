@@ -149,6 +149,7 @@ def transform_2(F, contact): # this transforms F to Fnormal in each dimension.
          [1, 0, 1],
          [1, 1, 0]]
     Fnormal = np.dot(A, -1 * F * contact)
+    import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
     return Fnormal
 ###################
 # Model Main Function

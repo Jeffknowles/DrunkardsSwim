@@ -37,7 +37,8 @@ def plot_tank(axes = None):
 
     return axes
 
-def plot_track3d(track, axes = None):
+def plot_track3d(data, axes = None):
+    track = data['track']
     if axes == None:
         fig = plt.figure()
         axes = fig.add_subplot(111, projection = '3d')

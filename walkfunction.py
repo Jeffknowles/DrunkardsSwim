@@ -58,11 +58,12 @@ min_bounds = np.array([0, 0, 0])       ## minimum boundries
 max_bounds = np.array([0.685, 0.15, 0.15])## maximum boundries
 
 # set lateral line model params
-lat_tau = 0.1 # increasing slows spiking (time constant of neuron)
+lat_tau = 0.135 # increasing slows spiking (time constant of neuron)
 lat_reset = 0 # reset potential
 lat_thresh = 1 # spike threshold
-sensitivity = 1.5 # increasing causes increased spiking
-leak = 0.0001 # leakyness
+sensitivity = 1.25 # decreasing causes increased spiking
+leak = 0.0001
+
 ###################
 # Model Subfunctions
 ###################

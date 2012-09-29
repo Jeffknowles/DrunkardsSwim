@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Line3D
+from matplotlib.lines import Line2D 
 
 def plot_tank(axes = None):
     if axes == None:
@@ -84,6 +85,8 @@ def plot_xdata(data):
 
     return a
 
+
+
 def plot_kineticdata(data):
     fig = plt.figure()
     a = {}
@@ -111,9 +114,109 @@ def plot_kineticdata(data):
 
     return fig
 
+def plot_leak(axes = None):
+    if axes == None:
+        fig = plt.figure()
+        axes = fig.add_subplot(111, projection = '3d')
+        axes.set_xlim(-0.05, 1.05)
+        #axes.set_ylim(0, 15)
 
 
+    c1 = '.6' 
+    box = {}
+    box['bottom1'] = Line2D([0, 100], [0, 0], color = c1, linewidth = 2)
+    box['top1'] = Line2D([0, 100], [1, 1], color = c1, linewidth = 2)
 
+
+    keylist = box.keys()
+    keylist.sort()
+    for key in keylist:
+        axes.add_line(box[key])
+
+    axes.set_axis_bgcolor('w')
+    
+    return axes
+
+def plot_flow(current,axes = None):
+    if axes == None:
+        fig = plt.figure()
+        axes = fig.add_subplot(111)
+        axes.set_xlim(-0.05, 1.05)
+        #axes.set_ylim(0, 15)
+
+    c1 = '.6' 
+    box = {}
+    box['bottom1'] = Line2D([0, 100], [0, 0], color = c1, linewidth = 2)
+    box['top1'] = Line2D([0, 100], [current,current], color = c1, linewidth = 2)
+
+
+    keylist = box.keys()
+    keylist.sort()
+    for key in keylist:
+        axes.add_line(box[key])
+
+    axes.set_axis_bgcolor('w')
+    
+    return axes
+
+
+def plot_flow_field(flow_field = 'jeb',axes = None):
+    
+    if flow_field.lower() == 'new':
+        current_data = np.array([[ 0.08,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.15],
+                              [ 0.15 ,  0.3 ,  0.3 ,  0.5 ,  0.3 ,  0.15 ],
+                              [ 0.15 ,  0.5 ,  0.4 ,  0.4 ,  0.5 ,  0.15 ],
+                              [ 0.15 ,  1.0 ,  0.6 ,  0.6 ,  1.0 ,  0.15 ],
+                              [ 0.15 ,  0.5 ,  1.0 ,  1.0 ,  0.5 ,  0.15 ],
+                              [ 0.10 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.10 ]])
+    if flow_field.lower() == 'jeb':
+        current_data = np.array([[ 0.05,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.05],
+                              [ 0.1 ,  0.4 ,  0.4 ,  0.4 ,  0.4 ,  0.1 ],
+                              [ 0.1 ,  0.4 ,  0.5 ,  0.5 ,  0.4 ,  0.1 ],
+                              [ 0.1 ,  0.4 ,  1.0 ,  0.8 ,  0.4 ,  0.1 ],
+                              [ 0.1 ,  0.2 ,  0.2 ,  0.2 ,  0.2 ,  0.1 ],
+                              [ 0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
+    if flow_field.lower() == 'none':
+        current_data = np.zeros((6,6))
+        
+    if axes == None:
+        fig = plt.figure()
+        axes = fig.add_subplot(111)
+        
+    axes.imshow(current_data, interpolation='None', origin='lower')
+    
+
+    return axes
+
+def plot_leak2D(data, axes = None):
+    if axes == None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    if 'lateral_line' in data:
+
+        ax.plot(data['lateral_line'], 'k')
+        ax.plot(np.ones(data['time'].shape[0]),'--k',linewidth=1)
+        ax.plot(np.zeros(data['time'].shape[0]),'--k',linewidth=1)
+        ax.text(0.01, 0.99, 'threshold', fontsize=20,transform=ax.transAxes)
+        ax.text(0.01, 0.01, 'baseline',  fontsize=20,transform=ax.transAxes)
+        plt.ylim(-0.05,1.05)
+        plt.axis('off')
+    return fig
+
+def plot_current2D(data, current, axes = None):
+    if axes == None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    if 'flow_rate' in data:
+
+        ax.plot(data['flow_rate'], 'k')
+        ax.plot(np.ones(data['time'].shape[0]) * 100 * current,'--k',linewidth=1)
+        ax.plot(np.zeros(data['time'].shape[0]),'--k',linewidth=1)
+        ax.text(0.01, 0.99, str(current) + 'cm/s', fontsize=20,transform=ax.transAxes)
+        ax.text(0.01, 0.01, '0 cm/s',  fontsize=20,transform=ax.transAxes)
+        plt.ylim(-0.1,1.025*current)
+        plt.axis('off')
+    return fig
     
 
 

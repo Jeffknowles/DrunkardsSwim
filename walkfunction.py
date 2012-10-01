@@ -10,13 +10,13 @@ from scipy.stats import rv_discrete
 ndim = 3
 
 # define animal's size physical parameteres
-bdrag = 0.00075 # this is presently being used in lew of the cdrad and area
-area = 2e-4    # set the square area
-cdrag = 0.0287 # according to Liu et al 1997
-mass = 0.0004 
-static_friction_u = 0.6 # measured by Knowles and Lee
-kinetic_friction_u = 0.5 # estimated to be very low
-gravity = np.array([0, 0, -.05])#-.05]) # Set specific gravity (deps on bouyancy)
+bdrag = 0.00075             # this linear model coefficent is being used lew of the cdrad and area
+area = 2e-4                 # set the square area
+cdrag = 0.0287              # according to Liu et al 1997
+mass = 0.0004               
+static_friction_u = 0.6          # measured by Knowles and Lee (unpublished)
+kinetic_friction_u = 0.5         # estimated to be very low
+gravity = np.array([0, 0, -.05]) #-.05]) # Set specific gravity (deps on bouyancy)
 
 # Behavioral state parameters
 nstates = 3
@@ -46,27 +46,28 @@ state_data[2] = {'power': 10e-5,                 # state 2 is triggered by the l
                  'sda_p': 0.01*np.pi,
                  }
 
-transition_matrix = np.array([[0.991, 0.009, 0.0],  # define transition probability matrix for transitions among states (p = p / second)
+transition_matrix = np.array([[0.991, 0.009, 0.0],      # define transition probability matrix for transitions among states (p = p / second)
                               [0.025, 0.975, 0.0],
                               [0.009, 0.0,   0.991]])
 
 
 
 # Tank Boundaries
-bounded = True        ## Turn boundries on or off (True or False)
-min_bounds = np.array([0, 0, 0])       ## minimum boundries
-max_bounds = np.array([0.685, 0.15, 0.15])## maximum boundries
+bounded = True        # Turn boundries on or off (True or False)
+friction = True       # turn friciton on or off (True or False)
+min_bounds = np.array([0, 0, 0])           # minimum boundries
+max_bounds = np.array([0.685, 0.15, 0.15]) # maximum boundries
 
 # set lateral line model params
-lat_tau = 0.135 # increasing slows spiking (time constant of neuron)
-lat_reset = 0 # reset potential
-lat_thresh = 1 # spike threshold
-sensitivity = 1.25 # decreasing causes increased spiking
+lat_tau = 0.135     # increasing slows spiking (time constant of neuron)
+lat_reset = 0       # reset potential
+lat_thresh = 1      # spike threshold
+sensitivity = 1.25  # decreasing causes increased spiking
 leak = 0.0001
 
-###################
-# Model Subfunctions
-###################
+
+
+# Set the flow fields
 current_data = {}
 current_data['y'] = np.arange(0, 0.15, 0.15 / 6)
 current_data['z'] = np.arange(0, 0.15, 0.15 / 6)
@@ -84,6 +85,9 @@ current_data['jeb'] = np.array([[ 0.05,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.05],
                               [ 0.1 ,  0.2 ,  0.2 ,  0.2 ,  0.2 ,  0.1 ],
                               [ 0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ,  0.1 ]])
 
+###################
+# Model Subfunctions
+###################
 def return_local_current(position, flow_version = 'new'):
     if flow_version.lower() in current_data:
         idx_y = np.argmin(abs(current_data['y'] - position[1]))
@@ -125,7 +129,8 @@ def calculate_friction(position, velocity, F):
         contact = -1 * min_contact + 1 * max_contact
         if np.linalg.norm(velocity) == 0:  # static friction if speed = 0
             Ffriction = transform_1(F, contact)  # this pulls the force applied paralell to each surface
-            #if np.linalg.norm(Ffriction) > transform_2(F, contact) * static_friction_u
+            if np.linalg.norm(Ffriction) > calculate_normal_forace(F, contact) * static_friction_u:
+                import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
             #Ffriction = np.min(np.array([Ffriction, calculate_normal_forace(F, contact) * static_friction_u]), axis = 0) # this uses normal_force * static_friction_u to calculate the maximum frictional force 
         else:   # kinetic friction
             Ffriction = np.array([0, 0, 0])
@@ -151,6 +156,7 @@ def calculate_normal_forace(F, contact): # this transforms F to Fnormal in each 
     Fnormal = top_normal + bottom_normal 
     import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
     return Fnormal
+
 ###################
 # Model Main Function
 ###################
@@ -247,7 +253,7 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
         F = (Fthrust.flatten() + Fdrag.flatten() + gravity * mass)
 
         # if bounded mode is on, then  calculate friction and add it to F
-        if bounded:
+        if bounded and friction:
             Ffriction = calculate_friction(position[bincount-1, :], velocity[bincount-1, :], F)
             F = F + Ffriction
 

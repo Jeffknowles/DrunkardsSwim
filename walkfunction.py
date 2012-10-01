@@ -25,9 +25,9 @@ state_data[0] = {'power': 0,                    # states 0 and 1 are the normal 
                  'orientation_type': 'animal',
                  'center_theta': None,
                  'center_phi': None,
-                 'turn_lambda': 3,
-                 'sda_t': 0.1*np.pi,
-                 'sda_p': 0.1*np.pi,
+                 'turn_lambda': 1,
+                 'sda_t': 0.2*np.pi,
+                 'sda_p': 0.2*np.pi,
                  }
 state_data[1] = {'power': 8e-5,
                  'orientation_type': 'animal',

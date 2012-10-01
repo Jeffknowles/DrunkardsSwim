@@ -10,7 +10,7 @@ import plot_functions
 FLOW_DYNAMICS = 'JEB'
 
 t_noflow = 10 # in sec
-t_flow = 30 # in sec
+t_flow = 50 # in sec
 
 binsize = 0.1
 current = 5 # in cm/s.
@@ -53,19 +53,25 @@ class SubplotAnimation(animation.TimedAnimation):
         
         self.t = np.arange(0,len(track_data['no_ll'][0]['track']))
         self.flow = flow[self.t]
+        self.flow_flash = 0
 
 
         self.info1 = ax2.text2D(0.90,0.95,'State key',fontsize = 18,transform=ax2.transAxes)
         self.info2 = ax2.text2D(0.90,0.90,'------------',fontsize = 18, transform=ax2.transAxes)
-        self.info2 = ax2.text2D(0.90,0.75,'Black: rest',fontsize = 18, transform=ax2.transAxes)
-        self.info3 = ax2.text2D(0.90,0.60,'Blue: swim ', fontsize = 18, transform=ax2.transAxes)
+        self.info2 = ax2.text2D(0.90,0.75,'Blue: rest',fontsize = 18, transform=ax2.transAxes)
+        self.info3 = ax2.text2D(0.90,0.60,'Black: swim ', fontsize = 18, transform=ax2.transAxes)
         self.info4 = ax2.text2D(0.90,0.45,'Red: lat. line.', fontsize = 18, transform=ax2.transAxes)
 
         self.flowtexta1 = ax1.text2D(0.001, 0.65, 'Flow 0 cm/s', fontsize=18, transform=ax1.transAxes)
         self.flowtexta2 = ax2.text2D(0.001, 0.65, 'Flow 0 cm/s', fontsize=18, transform=ax2.transAxes)
 
-        self.meantext1 = ax1.text2D(0.001, 0.1, 'Xmean = 37.5 +/- 0', fontsize=18, transform=ax1.transAxes)
-        self.meantext2 = ax2.text2D(0.001, 0.1, 'Xmean = 37.5 +/- 0', fontsize=18, transform=ax2.transAxes)
+        self.meantext1 = ax1.text2D(0.4, 0, 'X mean = 37.5 +/- 0', fontsize=18, color = 'green', transform=ax1.transAxes)
+        self.meantext2 = ax2.text2D(0.4, 0, 'X mean = 37.5 +/- 0', fontsize=18, color = 'green', transform=ax2.transAxes)
+
+        self.ax1mean = Line3D([37.5, 37.5], [0, 15], [0, 0], color = 'green', linewidth = 2)
+        ax1.add_line(self.ax1mean)
+        self.ax2mean = Line3D([37.5, 37.5], [0, 15], [0, 0], color = 'green', linewidth = 2)
+        ax2.add_line(self.ax2mean)
 
         plot_functions.plot_tank(ax1)
         plot_functions.plot_tank(ax2)
@@ -144,14 +150,30 @@ class SubplotAnimation(animation.TimedAnimation):
 
         mean_x = np.mean([animal['track'][head,0] for animal in track_data['no_ll']])
         std_x = np.std([animal['track'][head,0] for animal in track_data['no_ll']])
-        self.meantext1.set_text('Xmean = ' + str(round(mean_x)) + ' +/- ' + str(round(std_x)))
-
+        self.meantext1.set_text('Xmean = ' + str(round(mean_x)) + ' +/- ' + str(int(round(std_x))))
+        self.ax1mean.set_data([mean_x, mean_x], [0, 15])
+        self.ax1mean.set_3d_properties([0, 0])
+        self._drawn_artists.append(self.ax1mean)
+        
         mean_x = np.mean([animal['track'][head,0] for animal in track_data['ll']])
         std_x = np.std([animal['track'][head,0] for animal in track_data['ll']])
-        self.meantext2.set_text('Xmean = ' + str(round(mean_x)) + ' +/- ' + str(round(std_x)))
+        self.meantext2.set_text('Xmean = ' + str(round(mean_x)) + ' +/- ' + str(int(round(std_x))))
+        self.ax2mean.set_data([mean_x, mean_x], [0, 15])
+        self.ax2mean.set_3d_properties([0, 0])
+        self._drawn_artists.append(self.ax2mean)
 
-        self.flowtexta1.set_text('Flow ' + str(self.flow[head]) + ' cm/s')
-        self.flowtexta2.set_text('Flow ' + str(self.flow[head]) + ' cm/s')
+        if self.flow[head] > 0 and self.flow_flash < 20: 
+            self.flow_flash += 1
+            if isodd(self.flow_flash):
+                self.flowtexta1.set_text('')
+                self.flowtexta2.set_text('')
+            else:
+                self.flowtexta1.set_text('Flow ' + str(self.flow[head]) + ' cm/s')
+                self.flowtexta2.set_text('Flow ' + str(self.flow[head]) + ' cm/s')
+        else:
+            self.flowtexta1.set_text('Flow ' + str(self.flow[head]) + ' cm/s')
+            self.flowtexta2.set_text('Flow ' + str(self.flow[head]) + ' cm/s')
+
 
         
 
@@ -165,7 +187,13 @@ class SubplotAnimation(animation.TimedAnimation):
     #     for l in lines:
     #         l.set_data([], [])
 
-ani = SubplotAnimation()
-ani.save('group2.mp4', fps=20, codec='mpeg4', clear_temp=True, frame_prefix='_tmp')
-#plt.show()
+
+def isodd(num):
+    return num & 1 and True or False
+
+if __name__ == "__main__":
+    ani = SubplotAnimation()
+    ani.save('group2g.mp4', fps=20, codec='mpeg4', clear_temp=True, frame_prefix='_tmp')
+    #plt.show()
+
 

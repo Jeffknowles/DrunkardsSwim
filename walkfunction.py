@@ -54,7 +54,7 @@ transition_matrix = np.array([[0.991, 0.009, 0.0],      # define transition prob
 
 # Tank Boundaries
 bounded = True        # Turn boundries on or off (True or False)
-friction = True       # turn friciton on or off (True or False)
+friction = False       # turn friciton on or off (True or False)
 min_bounds = np.array([0, 0, 0])           # minimum boundries
 max_bounds = np.array([0.685, 0.15, 0.15]) # maximum boundries
 
@@ -130,7 +130,8 @@ def calculate_friction(position, velocity, F):
         if np.linalg.norm(velocity) == 0:  # static friction if speed = 0
             Ffriction = transform_1(F, contact)  # this pulls the force applied paralell to each surface
             if np.linalg.norm(Ffriction) > calculate_normal_forace(F, contact) * static_friction_u:
-                import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
+                pass
+                #import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
             #Ffriction = np.min(np.array([Ffriction, calculate_normal_forace(F, contact) * static_friction_u]), axis = 0) # this uses normal_force * static_friction_u to calculate the maximum frictional force 
         else:   # kinetic friction
             Ffriction = np.array([0, 0, 0])
@@ -154,7 +155,6 @@ def calculate_normal_forace(F, contact): # this transforms F to Fnormal in each 
     top_normal = (contact == 1) * (F > 0) * F
     bottom_normal = (contact == -1) * (F < 0) * F
     Fnormal = top_normal + bottom_normal 
-    import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
     return Fnormal
 
 ###################
@@ -193,8 +193,8 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
         flow_on = True
 
     # set initial orientation angles
-    theta = 0 
-    phi = 0
+    theta = np.random.uniform(0, 2 * np.pi, 1) 
+    phi = np.random.uniform(0, 2 * np.pi, 1)
 
     # setup state records
     state = 0

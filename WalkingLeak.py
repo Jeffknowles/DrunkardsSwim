@@ -43,7 +43,9 @@ for a in flow:
         flow_field = np.append(flow_field,None)
     if a > 0:
         flow_field = np.append(flow_field,'jeb')
-    
+
+state_colors = ['blue', 'black', 'red']
+
 class SubplotAnimation(animation.TimedAnimation):
     def __init__(self):
         fig = plt.figure(facecolor = 'w', figsize = [12, 6])
@@ -58,16 +60,23 @@ class SubplotAnimation(animation.TimedAnimation):
         self.x = frog1['track'][self.t,0]
         self.y = frog1['track'][self.t,1]
         self.z = frog1['track'][self.t,2]
+        self.state = frog1['state'][self.t]
         
         self.x2 = frog1['time'][self.t]
         self.y2 = frog1['flow_rate'][self.t]
         self.y3 = frog1['lateral_line'][self.t]
 
         ax2.text(0.01, 0.8, str(current) + ' cm/s', fontsize=16, transform=ax2.transAxes)
-        ax2.text(0.01, 0.05, '0 cm/s', fontsize=16, transform=ax2.transAxes)
+        ax2.text(0.01, 0.08, '0 cm/s', fontsize=16, transform=ax2.transAxes)
         ax3.text(0.01, 0.8, 'threshold',fontsize=16, transform=ax3.transAxes)
         ax3.text(0.01, 0.08, 'baseline', fontsize=16, transform=ax3.transAxes)
 
+        ax1.text2D(0.90,0.95,'State key',fontsize = 16,transform=ax1.transAxes)
+        ax1.text2D(0.90,0.90,'------------',fontsize = 16, transform=ax1.transAxes)
+        ax1.text2D(0.90,0.75,'Blue: rest',fontsize = 16, transform=ax1.transAxes)
+        ax1.text2D(0.90,0.60,'Black: swim ', fontsize = 16, transform=ax1.transAxes)
+        ax1.text2D(0.90,0.45,'Red: lat. line.', fontsize = 16, transform=ax1.transAxes)
+        
 
         plot_functions.plot_tank(ax1)
         plot_functions.plot_flow(current,ax2)
@@ -77,15 +86,15 @@ class SubplotAnimation(animation.TimedAnimation):
             
         self.line1 = Line3D([], [], [], color='black')
         self.line1a = Line3D([], [], [], color='red', linewidth=2)
-        self.line1e = Line3D([], [], [], color='red', marker='o', markeredgecolor='r')
+        self.line1e = Line3D([], [], [], color='red', marker='o', markeredgecolor='k', markersize = 8)
 
         self.line2 = Line2D([], [], color='black')
-        self.line2e = Line2D([], [], color='red', marker='o', markeredgecolor='r')
+        self.line2e = Line2D([], [], color='red', marker='o', markeredgecolor='k', markersize = 8)
         
         self.line3 = Line2D([], [], color='red', linewidth=2)
-        self.line3e = Line2D([], [], color='red', marker='o', markeredgecolor='r')
+        self.line3e = Line2D([], [], color='red', marker='o', markeredgecolor='k', markersize = 8)
 
-        self.line4 = Line2D([],[], color='red', marker='o', markeredgecolor='r', markersize=10)
+        self.line4 = Line2D([],[], color='red', marker='o', markeredgewidth = 2, markeredgecolor='w', markersize=11)
         
         ax1.add_line(self.line1)
         ax1.add_line(self.line1a)
@@ -106,7 +115,7 @@ class SubplotAnimation(animation.TimedAnimation):
         ax1.set_aspect('equal')
 
         ax2.set_xlim(0, len(frog1['time'])*binsize*DOWNSAMPLE_RATE)
-        ax2.set_ylim(-0.05, 1.05 * current)
+        ax2.set_ylim(-0.25, 1.05 * current)
         ax2.axis('off')
 
         ax3.set_xlim(0, len(frog1['time'])*binsize*DOWNSAMPLE_RATE)
@@ -148,14 +157,18 @@ class SubplotAnimation(animation.TimedAnimation):
         self.line1.set_3d_properties(self.z[:i])
         self.line1a.set_3d_properties(self.z[head_slice])
         self.line1e.set_3d_properties(self.z[head])
-
+        self.line1e.set_color(state_colors[int(self.state[head])])
+        
         self.line2.set_data(self.x2[:i], self.y2[:i])
         self.line2e.set_data(self.x2[head], self.y2[head])
+        self.line2e.set_color(state_colors[int(self.state[head])])
         
         self.line3.set_data(self.x2[:i], self.y3[:i])
         self.line3e.set_data(self.x2[head], self.y3[head])
+        self.line3e.set_color(state_colors[int(self.state[head])])
         
         self.line4.set_data(self.y[i]/15.0*5.0, self.z[i]/15.0*5.0)
+        self.line4.set_color(state_colors[int(self.state[head])])
         
         self._drawn_artists = [self.line1, self.line1a, self.line1e,
                                self.line2,self.line2e, self.line3,
@@ -177,5 +190,5 @@ class SubplotAnimation(animation.TimedAnimation):
             l.set_data([], [])
 
 ani = SubplotAnimation()
-#ani.save('walk.mp4', fps=20, codec='mpeg4', clear_temp=True, frame_prefix='_tmp')
+#ani.save('walk.mp4', fps=30, codec='mpeg4', clear_temp=True, frame_prefix='_tmp')
 plt.show()

@@ -6,6 +6,7 @@ import matplotlib.animation as animation
 import walkfunction as wlk
 import plot_functions
 
+uname = 'jeffknowles'
 
 FLOW_DYNAMICS = 'JEB'
 
@@ -22,7 +23,7 @@ current = 8 # in cm/s.
 
 if REAL_DATA == 1:
     # Import No Flow data:
-    frog1_NF = np.genfromtxt('/Users/brianschmidt/Dropbox/TadpoleStuff/Tracked_data_CSV/NPF5_2_NF_lessFilt.csv',delimiter=',')
+    frog1_NF = np.genfromtxt('/Users/' + uname + '/Dropbox/TadpoleStuff/Tracked_data_CSV/NPF5_2_NF_lessFilt.csv',delimiter=',')
     
     # filter zeros downsample
     index = frog1_NF[:,0]!=0
@@ -33,7 +34,7 @@ if REAL_DATA == 1:
     t_noflow = len(frog1_NF)*binsize*DOWNSAMPLE_RATE
 
     # Import Flow data:
-    frog1_F = np.genfromtxt('/Users/brianschmidt/Dropbox/TadpoleStuff/Tracked_data_CSV/NPF5_2_F_lessFilt.csv',delimiter=',')
+    frog1_F = np.genfromtxt('/Users/' + uname + '/Dropbox/TadpoleStuff/Tracked_data_CSV/NPF5_2_F_lessFilt.csv',delimiter=',')
 
     # filter zeros and downsample
     index = frog1_F[:,0]!=0
@@ -65,6 +66,8 @@ LATLINE = True
 frog2 = wlk.randwalk(t_noflow, binsize, 0, np.array([0.34, 0.075, 0.15]), latline = LATLINE, flow_version = FLOW_DYNAMICS)
 frog2 = wlk.randwalk(t_flow, binsize, current, frog2,latline = LATLINE, flow_version = FLOW_DYNAMICS)
 frog2['track'] = frog2['track']*100
+
+state_colors = ['blue', 'black', 'red']
 
 # downsample
 for data in frog2:
@@ -102,9 +105,10 @@ class SubplotAnimation(animation.TimedAnimation):
         self.framerate = ax1.text2D(0.90, 0.85, str(DOWNSAMPLE_RATE) + 'x speed', fontsize = 18, transform=ax1.transAxes)
         self.info1 = ax2.text2D(0.90,0.95,'State key',fontsize = 18,transform=ax2.transAxes)
         self.info2 = ax2.text2D(0.90,0.90,'------------',fontsize = 18, transform=ax2.transAxes)
-        self.info2 = ax2.text2D(0.90,0.75,'0: rest',fontsize = 18, transform=ax2.transAxes)
-        self.info3 = ax2.text2D(0.90,0.60,'1: swim ', fontsize = 18, transform=ax2.transAxes)
-        self.info4 = ax2.text2D(0.90,0.45,'2: lat. line.', fontsize = 18, transform=ax2.transAxes)
+        self.info2 = ax2.text2D(0.90,0.75,'Blue: rest',fontsize = 18, transform=ax2.transAxes, color = 'blue')
+        self.info3 = ax2.text2D(0.90,0.60,'Black: swim ', fontsize = 18, transform=ax2.transAxes, color = 'black')
+        self.info4 = ax2.text2D(0.90,0.45,'Red: L.L. orientation.', fontsize = 18, transform=ax2.transAxes, color = 'red')
+
 
         plot_functions.plot_tank(ax1)
         plot_functions.plot_tank(ax2)
@@ -118,12 +122,12 @@ class SubplotAnimation(animation.TimedAnimation):
         #ax2.set_zlabel('z')
         
         self.line1 = Line3D([], [], [], color='black')
-        self.line1a = Line3D([], [], [], color='red', linewidth=2)
-        self.line1e = Line3D([], [], [], color='red', marker='o', markeredgecolor='r')
+        self.line1a = Line3D([], [], [], color='green', linewidth=2)
+        self.line1e = Line3D([], [], [], color='green', marker='o')
 
         self.line2 = Line3D([], [], [], color='black')
         self.line2a = Line3D([], [], [], color='red', linewidth=2)
-        self.line2e = Line3D([], [], [], color='red', marker='o', markeredgecolor='r')
+        self.line2e = Line3D([], [], [], color='red', marker='o')
 
         
         ax1.add_line(self.line1)
@@ -177,12 +181,15 @@ class SubplotAnimation(animation.TimedAnimation):
         self.line2.set_3d_properties(self.z2[:i])
         self.line2a.set_3d_properties(self.z2[head_slice])
         self.line2e.set_3d_properties(self.z2[head])
+        self.line2a.set_color(color = state_colors[int(self.state2[head])])
+        self.line2e.set_color(color = state_colors[int(self.state2[head])])
 
         self.flowtexta1.set_text('flow ' + str(self.flow[head]) + ' cm/s')
         self.flowtexta2.set_text('flow ' + str(self.flow[head]) + ' cm/s')
         if REAL_DATA == 0:
             self.statetexta1.set_text('state ' + str(self.state1[head]))
-        self.statetexta2.set_text('state ' + str(self.state2[head]))
+        self.statetexta2.set_text('state ' + str(int(self.state2[head])))
+        self.statetexta2.set_color(state_colors[int(self.state2[head])])
         
 
         self._drawn_artists = [self.line1, self.line1a, self.line1e,

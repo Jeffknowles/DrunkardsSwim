@@ -13,7 +13,7 @@ t_noflow = 10 # in sec
 t_flow = 50 # in sec
 
 binsize = 0.1
-current = 5 # in cm/s.
+current = 8 # in cm/s.
 
 
 n_animals = 100
@@ -58,9 +58,9 @@ class SubplotAnimation(animation.TimedAnimation):
 
         self.info1 = ax2.text2D(0.90,0.95,'State key',fontsize = 18,transform=ax2.transAxes)
         self.info2 = ax2.text2D(0.90,0.90,'------------',fontsize = 18, transform=ax2.transAxes)
-        self.info2 = ax2.text2D(0.90,0.75,'Blue: rest',fontsize = 18, transform=ax2.transAxes)
-        self.info3 = ax2.text2D(0.90,0.60,'Black: swim ', fontsize = 18, transform=ax2.transAxes)
-        self.info4 = ax2.text2D(0.90,0.45,'Red: lat. line.', fontsize = 18, transform=ax2.transAxes)
+        self.info2 = ax2.text2D(0.90,0.75,'Blue: rest',fontsize = 18, transform=ax2.transAxes, color = 'blue')
+        self.info3 = ax2.text2D(0.90,0.60,'Black: swim ', fontsize = 18, transform=ax2.transAxes, color = 'black')
+        self.info4 = ax2.text2D(0.90,0.45,'Red: lat. line', fontsize = 18, transform=ax2.transAxes, color = 'red')
 
         self.flowtexta1 = ax1.text2D(0.001, 0.65, 'Flow 0 cm/s', fontsize=18, transform=ax1.transAxes)
         self.flowtexta2 = ax2.text2D(0.001, 0.65, 'Flow 0 cm/s', fontsize=18, transform=ax2.transAxes)

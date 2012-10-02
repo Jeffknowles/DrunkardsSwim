@@ -37,7 +37,7 @@ state_data[1] = {'power': 8e-5,
                  'sda_t': 0.1*np.pi,
                  'sda_p': 0.1*np.pi,
                  }
-state_data[2] = {'power': 10e-5,                 # state 2 is triggered by the ll event (no input probability from 0,1)
+state_data[2] = {'power': 8e-5,                 # state 2 is triggered by the ll event (no input probability from 0,1)
                  'orientation_type': 'absolute',
                  'center_theta': np.pi,
                  'center_phi': -np.pi / 2,
@@ -46,15 +46,15 @@ state_data[2] = {'power': 10e-5,                 # state 2 is triggered by the l
                  'sda_p': 0.01*np.pi,
                  }
 
-transition_matrix = np.array([[0.991, 0.009, 0.0],      # define transition probability matrix for transitions among states (p = p / second)
-                              [0.025, 0.975, 0.0],
-                              [0.009, 0.0,   0.991]])
-
+NaN = float('nan')
+transition_matrix = np.array([[NaN,     .09,    0.0],      # transition rate matrix
+                              [0.25,    NaN,    0.0],      # average time in a state is 1 / (sum of rates away)
+                              [0.33,    0.0,    NaN]])     
 
 
 # Tank Boundaries
 bounded = True        # Turn boundries on or off (True or False)
-friction = False       # turn friciton on or off (True or False)
+friction = True       # turn friciton on or off (True or False)
 min_bounds = np.array([0, 0, 0])           # minimum boundries
 max_bounds = np.array([0.685, 0.15, 0.15]) # maximum boundries
 
@@ -122,23 +122,45 @@ def calculate_drag(s, form = 'linear'):
         d = (0.5) * area * cdrag * s**2 # caclulate drag force magnitude
     return d
 
-def calculate_friction(position, velocity, F):
+def calculate_transition_p(transmat, binsize):
+    transmat = transmat * binsize
+    size = transmat.shape[0]
+    for k in range(0, size):
+        transmat[k,k] = 1 - np.sum(transmat[k, k != np.arange(0,size)])
+    
+    return transmat
+
+def test_friction():
+    pos = np.array([10, 10, 0]); f = np.array([1, 1, -4]); vel = np.array([0, 0, 0]) # static
+    print calculate_friction(pos, vel, f)
+    pos = np.array([10, 10, 0]); f = np.array([1, 1, -4]); vel = np.array([0, 0, 0]) # static
+    print calculate_friction(pos, vel, f)
+    pos = np.array([6, 0, 0]); f = np.array([1, 1, 4]); vel = np.array([0, 0, 0]) # static
+    print calculate_friction(pos, vel, f)
+
+    pos = np.array([10, 0, 0]); f = np.array([1, 1, -4]); vel = np.array([1.5, 1.2, 0]) # kinetic
+    print calculate_friction(pos, vel, f)
+    pos = np.array([10, 0, 0]); f = np.array([1, 1, -2]); vel = np.array([1.5, 1.2, 0]) # static
+    print calculate_friction(pos, vel, f)
+
+def calculate_friction(position, velocity, F, binsize):
     min_contact = (position == min_bounds)
     max_contact = (position == max_bounds)
     if np.any(min_contact) or np.any(max_contact):
         contact = -1 * min_contact + 1 * max_contact
         if np.linalg.norm(velocity) == 0:  # static friction if speed = 0
             Ffriction = transform_1(F, contact)  # this pulls the force applied paralell to each surface
-            if np.linalg.norm(Ffriction) > calculate_normal_forace(F, contact) * static_friction_u:
-                pass
-                #import sys; sys.stdout = sys.__stdout__; import ipdb; ipdb.set_trace()
-            #Ffriction = np.min(np.array([Ffriction, calculate_normal_forace(F, contact) * static_friction_u]), axis = 0) # this uses normal_force * static_friction_u to calculate the maximum frictional force 
-        else:   # kinetic friction
-            Ffriction = np.array([0, 0, 0])
-            #Ffriction = transform_2(F, contact) * kinetic_friction_u # this uses normal_force * kinetic_friction to find the kinetic firctional force
+            if np.linalg.norm(Ffriction) > np.sum(calculate_normal_force(F, contact) * static_friction_u):
+                Ffriction = np.array([0, 0, 0])
+        else:
+            Fmag = np.sum(calculate_normal_force(F, contact) * kinetic_friction_u)
+            Fmag = min(Fmag, np.linalg.norm(velocity)*mass/binsize)
+            unit_vel = velocity / np.linalg.norm(velocity) 
+            Ffriction = -1 * unit_vel * Fmag
     else: 
         Ffriction = np.array([0, 0, 0])
     return Ffriction
+
 
 def transform_1(F, contact): # this transforms F to be mulitplied by contact and find the reverse of applied force paralell to the surface
     contact = contact != 0
@@ -151,11 +173,13 @@ def transform_1(F, contact): # this transforms F to be mulitplied by contact and
     Fnegative = -1 * F * paralell_contact
     return Fnegative
 
-def calculate_normal_forace(F, contact): # this transforms F to Fnormal in each dimension. 
+def calculate_normal_force(F, contact): # this transforms F to Fnormal in each dimension. 
     top_normal = (contact == 1) * (F > 0) * F
-    bottom_normal = (contact == -1) * (F < 0) * F
+    bottom_normal = (contact == -1) * (F < 0) * F * (-1)
     Fnormal = top_normal + bottom_normal 
     return Fnormal
+
+#test_friction()
 
 ###################
 # Model Main Function
@@ -184,7 +208,7 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
         bincount = input_data['time'].shape[0] - 1
 
     # transition matrix
-    TRANSMAT = transition_matrix #* (should we somehow normalize by binsize?)
+    TRANSMAT = calculate_transition_p(transition_matrix, binsize) #* (should we somehow normalize by binsize?)
 
     # Set Flow
     if flow_speed == 0:
@@ -254,7 +278,7 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
 
         # if bounded mode is on, then  calculate friction and add it to F
         if bounded and friction:
-            Ffriction = calculate_friction(position[bincount-1, :], velocity[bincount-1, :], F)
+            Ffriction = calculate_friction(position[bincount-1, :], velocity[bincount-1, :], F, binsize)
             F = F + Ffriction
 
         if printflag:
@@ -267,6 +291,8 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
             print 'Ffriction ', np.round(100000*Ffriction)
             print 'F ', np.round(1000000*F)
 
+        dv  = F*binsize/mass 
+        F = dv*mass/binsize
         # integrate    
         velocity[bincount,:] = velocity[bincount-1] + F*binsize/mass # Update Velocity 
         position[bincount,:] = position[bincount-1] + (velocity[bincount,:]*binsize) # Update Position
@@ -281,7 +307,7 @@ def randwalk(simlength, binsize, flow_speed, input_data, latline = True, flow_ve
 
         # run lateral line model
         if latline:
-            lat_v += (sensitivity * local_current[0] + leak * (0 - lat_v))*binsize/lat_tau
+            lat_v += (sensitivity * local_current[0] + leak * (0 - lat_v))*binsize/lat_tau + np.random.normal(0, 1e-2, 1)
             Vll[bincount] = lat_v
         if lat_v >= lat_thresh:
             period = 0
